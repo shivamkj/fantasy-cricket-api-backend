@@ -18,13 +18,17 @@ export async function createTeams() {
   await knex('team').insert(allTeams)
 }
 
+const matchStartId = 10000
+
 export async function createUpcomingMatches() {
-  const matches = createMatches(200, 10005)
+  const matches = createMatches(200, matchStartId + liveMatchCount)
   await knex('match').insert(matches)
 }
 
+export const liveMatchCount = 5
+
 export async function createLiveMatches() {
-  const matches = createMatches(5, 10000)
+  const matches = createMatches(liveMatchCount, matchStartId)
   for (const match of matches) {
     match['live'] = true
     match['crr'] = randomInt(5, 12)
