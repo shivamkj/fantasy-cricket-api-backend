@@ -1,3 +1,4 @@
+import { liveMatches, matchStartId, totalMatches } from './matches.js'
 import { knex } from './utils.js'
 import { randomInt } from './utils.js'
 
@@ -10,11 +11,11 @@ const lobbies = [
 ]
 
 export async function createLobby() {
-  for (let index = 10000; index < 10204; index++) {
+  for (let index = 0; index < totalMatches; index++) {
     const matchLobbies = Object.assign([], lobbies)
     for (const lobby of matchLobbies) {
-      lobby['match_id'] = index
-      if (index < 1004) lobby['playing_count'] = randomInt(2000, 10000)
+      lobby['match_id'] = matchStartId + index
+      if (index < liveMatches) lobby['playing_count'] = randomInt(2000, 10000)
     }
     await knex('lobby').insert(matchLobbies)
   }
