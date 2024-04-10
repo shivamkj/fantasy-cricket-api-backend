@@ -6,6 +6,12 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000,
 })
 
+pg.types.setTypeParser(pg.types.builtins.INT8, (value) => parseInt(value))
+
+pg.types.setTypeParser(pg.types.builtins.FLOAT8, (value) => parseFloat(value))
+
+pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value) => parseFloat(value))
+
 try {
   // the pool will emit an error on behalf of any idle clients
   // it contains if a backend error or network partition happens

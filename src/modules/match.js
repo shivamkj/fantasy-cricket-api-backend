@@ -3,7 +3,7 @@ import { pool } from '../postgres.js'
 export async function getMatchesV1(request, reply) {
   const start = request.query.start ?? 0
   const limit = request.query.limit ?? 10
-  console.log(limit, start)
+
   const sqlQuery = `
 SELECT
   m.id,
@@ -21,50 +21,48 @@ FROM "match" m
   JOIN team t2 ON m.team2_id = t2.id
 WHERE m.id > $1 LIMIT $2;
 `
-  const { rows } = await pool.query(sqlQuery, [start, limit])
+  const { rows: allMatch } = await pool.query(sqlQuery, [start, limit])
 
-  for (const match of rows) {
+  for (const match of allMatch) {
     if (match.live) {
-      match['t1Score'] = await getMatchScore(match.id, match.t1Id)
-      match['t2Score'] = await getMatchScore(match.id, match.t2Id)
+      match['t1Score'] = await getMatchScore(match.id, match.t1id)
+      match['t2Score'] = await getMatchScore(match.id, match.t2id)
     }
     delete match.t1id
     delete match.t2id
   }
 
-  reply.send(rows)
+  reply.send(allMatch)
 }
 
 async function getMatchScore(matchId, teamId) {
-  return {
-    run: 149,
-    over: 20,
-    wicket: 6,
-  }
+  console.log(matchId, teamId)
+  const scoreQuery = `
+SELECT
+  SUM(runs_off_bat) AS run,
+  COUNT(wicket) AS wicket,
+  MAX(ball) AS over
+FROM ball_by_ball_score
+WHERE match_id = $1 AND teamid = $2;
+`
+  const { rows: score } = await pool.query(scoreQuery, [matchId, teamId])
+  return score[0]
 }
 
 export async function getLobbyV1(request, reply) {
+  const matchId = request.params.matchId
+  if (!matchId) {
+    return reply.code(400).send({ error: 'matchId not passed' })
+  }
+
   const sqlQuery = `
 SELECT
   title, price, playing_count
 FROM lobby
-WHERE match_id = 10000 
+WHERE match_id = $1
 ORDER BY price;
 `
-  const { rows } = await pool.query(sqlQuery)
+  const { rows: lobbies } = await pool.query(sqlQuery, [matchId])
 
-  reply.send(rows)
-}
-
-export async function getLast6BallsV1(request, reply) {
-  const sqlQuery = `
-SELECT
-  title, price, playing_count
-FROM lobby
-WHERE match_id = 10000 
-ORDER BY price;
-`
-  const { rows } = await pool.query(sqlQuery)
-
-  reply.send(rows)
+  reply.send(lobbies)
 }
