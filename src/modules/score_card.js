@@ -1,3 +1,4 @@
+import { notFound } from '../fastify.js'
 import { pool } from '../postgres.js'
 
 export async function getLast6BallsV1(request, reply) {
@@ -15,7 +16,6 @@ ORDER BY ball DESC LIMIT 6;
 `
 
   const { rows: balls } = await pool.query(last6BallsQuery, [matchId])
-
   reply.send(balls)
 }
 
@@ -27,9 +27,7 @@ export async function getScoreCardV1(request, reply) {
 
   // Get IDs of teams
   const { rows: teams } = await pool.query('SELECT team1_id, team2_id FROM match WHERE id = $1', [matchId])
-  if (teams.length == 0) {
-    return reply.code(404).send({ error: 'matchId not found' })
-  }
+  if (teams.length == 0) return notFound(reply, 'match')
   const { team1_id: team1Id, team2_id: team2Id } = teams[0]
 
   const battersQuery = `

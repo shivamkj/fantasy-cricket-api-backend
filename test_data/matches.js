@@ -30,15 +30,11 @@ export async function createMatches() {
   const end = new Date(2024, 9, 30)
 
   for (let index = 0; index < totalMatches; index++) {
-    const team1Idx = randomInt(0, 9)
-    let team2Idx = team1Idx
-    while (team1Idx == team2Idx) {
-      team2Idx = randomInt(0, 9)
-    }
+    const { team1, team2 } = randomTeams()
     matches.push({
       id: matchStartId + index,
-      team1_id: allTeams[team1Idx].id,
-      team2_id: allTeams[team2Idx].id,
+      team1_id: team1.id,
+      team2_id: team2.id,
       start_time: randomDate(start, end),
       league: leagues[randomInt(0, 1)],
       live: false,
@@ -49,4 +45,14 @@ export async function createMatches() {
     matches[index]['live'] = true
   }
   await knex('match').insert(matches)
+}
+
+export function randomTeams() {
+  const teamLastIdx = allTeams.length - 1
+  const team1Idx = randomInt(0, teamLastIdx)
+  let team2Idx = team1Idx
+  while (team1Idx == team2Idx) {
+    team2Idx = randomInt(0, teamLastIdx)
+  }
+  return { team1: allTeams[team1Idx], team2: allTeams[team2Idx] }
 }

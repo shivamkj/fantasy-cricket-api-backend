@@ -1,6 +1,4 @@
 import fastifyPackage from 'fastify'
-import { getLobbyV1, getMatchesV1 } from './modules/match.js'
-import { getLast6BallsV1, getScoreCardV1 } from './modules/score_card.js'
 
 export const fastify = fastifyPackage({
   logger: true,
@@ -11,7 +9,10 @@ fastify.get('/', (request, reply) => {
   reply.send({ status: 'OK' })
 })
 
-fastify.get('/v1/matches', getMatchesV1)
-fastify.get('/v1/matches/:matchId/lobby', getLobbyV1)
-fastify.get('/v1/matches/:matchId/last-6-balls', getLast6BallsV1)
-fastify.get('/v1/matches/:matchId/scorecard', getScoreCardV1)
+export function notFound(reply, entity = 'entity') {
+  return reply.code(404).send({ error: `${entity} not found` })
+}
+
+export function clientErr(reply, error = 'Invalid Data passed') {
+  return reply.code(400).send({ error: error })
+}

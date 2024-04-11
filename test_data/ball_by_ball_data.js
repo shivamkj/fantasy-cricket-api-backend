@@ -4,7 +4,7 @@ import { match3Innings1, match3Innings2 } from './ball_by_ball_data/match3.js'
 import { match4Innings1, match4Innings2 } from './ball_by_ball_data/match4.js'
 import { match5Innings1, match5Innings2 } from './ball_by_ball_data/match5.js'
 import { players } from './ball_by_ball_data/players.js'
-import { knex, randomInt } from './utils.js'
+import { knex } from './utils.js'
 import { allTeams, matchStartId, liveMatches } from './matches.js'
 
 export async function createPlayers() {

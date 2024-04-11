@@ -1,6 +1,7 @@
 import { pool } from '../postgres.js'
+import { clientErr } from '../fastify.js'
 
-export async function getMatchesV1(request, reply) {
+export async function listMatchesV1(request, reply) {
   const start = request.query.start ?? 0
   const limit = request.query.limit ?? 10
 
@@ -36,7 +37,6 @@ WHERE m.id > $1 LIMIT $2;
 }
 
 async function getMatchScore(matchId, teamId) {
-  console.log(matchId, teamId)
   const scoreQuery = `
 SELECT
   SUM(runs_off_bat) AS run,
@@ -51,9 +51,7 @@ WHERE match_id = $1 AND teamid = $2;
 
 export async function getLobbyV1(request, reply) {
   const matchId = request.params.matchId
-  if (!matchId) {
-    return reply.code(400).send({ error: 'matchId not passed' })
-  }
+  if (!matchId) return clientErr(reply, 'matchId not passed')
 
   const sqlQuery = `
 SELECT
@@ -63,6 +61,5 @@ WHERE match_id = $1
 ORDER BY price;
 `
   const { rows: lobbies } = await pool.query(sqlQuery, [matchId])
-
   reply.send(lobbies)
 }

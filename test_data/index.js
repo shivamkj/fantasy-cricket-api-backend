@@ -10,5 +10,7 @@ await ballByBallData.createPlayers()
 await ballByBallData.createBallByBallData()
 
 await betting.createLobby()
+await betting.createUsers()
+await betting.createTicket()
 
 process.exit(0)

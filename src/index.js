@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { fastify } from './fastify.js'
 import { pool } from './postgres.js'
+import './routes.js'
 
 const PORT = process.env.PORT || 3003
 
@@ -14,6 +15,7 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, _) => {
 
 async function cleanUp() {
   console.log('cleaning up everything')
+  await fastify.close()
   await pool.end()
   console.log('shutting down')
 }
