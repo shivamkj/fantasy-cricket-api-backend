@@ -1,9 +1,10 @@
+#!/usr/bin/env node
+
 import 'dotenv/config'
 import { fastify } from './fastify.js'
 import { pool } from './postgres.js'
 import './routes.js'
 
-export const PROD = process.env.PROD == 'prod'
 const PORT = process.env.PORT || 3003
 
 fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, _) => {

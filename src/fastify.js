@@ -1,8 +1,9 @@
 import fastifyPackage from 'fastify'
-import { PROD } from './index.js'
+
+export const PROD = process.env.NODE_ENV == 'production'
 
 export const fastify = fastifyPackage({
-  logger: true,
+  logger: !PROD,
 })
 
 // Route for Health Check
