@@ -1,5 +1,5 @@
 import { pool } from '../postgres.js'
-import { clientErr } from '../fastify.js'
+import { ClientErr } from '../fastify.js'
 
 export async function listMatchesV1(request, reply) {
   const start = request.query.start ?? 0
@@ -51,7 +51,7 @@ WHERE match_id = $1 AND teamid = $2;
 
 export async function getLobbyV1(request, reply) {
   const matchId = request.params.matchId
-  if (!matchId) return clientErr(reply, 'matchId not passed')
+  if (!matchId) throw new ClientErr('matchId not passed')
 
   const sqlQuery = `
 SELECT

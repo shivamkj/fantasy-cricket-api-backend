@@ -1,11 +1,9 @@
-import { notFound } from '../fastify.js'
+import { NotFound, ClientErr } from '../fastify.js'
 import { pool } from '../postgres.js'
 
 export async function getLast6BallsV1(request, reply) {
   const matchId = request.params.matchId
-  if (!matchId) {
-    return reply.code(400).send({ error: 'matchId not passed' })
-  }
+  if (!matchId) throw new ClientErr('matchId not passed')
 
   const last6BallsQuery = `
 SELECT
@@ -21,13 +19,11 @@ ORDER BY ball DESC LIMIT 6;
 
 export async function getScoreCardV1(request, reply) {
   const matchId = request.params.matchId
-  if (!matchId) {
-    return reply.code(400).send({ error: 'matchId not passed' })
-  }
+  if (!matchId) throw new ClientErr('matchId not passed')
 
   // Get IDs of teams
   const { rows: teams } = await pool.query('SELECT team1_id, team2_id FROM match WHERE id = $1', [matchId])
-  if (teams.length == 0) return notFound(reply, 'match')
+  if (teams.length == 0) throw new NotFound('match')
   const { team1_id: team1Id, team2_id: team2Id } = teams[0]
 
   const battersQuery = `

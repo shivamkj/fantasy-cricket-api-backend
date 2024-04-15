@@ -1,4 +1,5 @@
 import fastifyPackage from 'fastify'
+import { PROD } from './index.js'
 
 export const fastify = fastifyPackage({
   logger: true,
@@ -9,10 +10,32 @@ fastify.get('/', (request, reply) => {
   reply.send({ status: 'OK' })
 })
 
-export function notFound(reply, entity = 'entity') {
-  return reply.code(404).send({ error: `${entity} not found` })
+fastify.setErrorHandler((err, _, reply) => {
+  if (err.name == customError) {
+    reply.status(err.httpCode).send({ error: err.message })
+  }
+
+  if (PROD) {
+    reply.status(500).send({ error: 'Internal Server Error' })
+  } else {
+    reply.status(500).send({ error: err.message })
+  }
+})
+
+const customError = 'customError'
+
+export class NotFound extends Error {
+  constructor(entity) {
+    super(`${entity} not found`)
+    this.httpCode = 404
+    this.name = customError
+  }
 }
 
-export function clientErr(reply, error = 'Invalid Data passed') {
-  return reply.code(400).send({ error: error })
+export class ClientErr extends Error {
+  constructor(error) {
+    super(error ?? 'Client ERROR')
+    this.httpCode = 400
+    this.name = customError
+  }
 }

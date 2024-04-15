@@ -8,6 +8,16 @@
             "database": "local",
             "name": "Local",
             "username": "local_user"
+        },
+        {
+            "previewLimit": 50,
+            "server": "65.2.131.75",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "username": "local_usr",
+            "database": "local",
+            "name": "AWS EC2 Local"
         }
     ]
 }
