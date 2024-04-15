@@ -1,0 +1,16 @@
+meta {
+  name: List Matches v1
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BaseURL}}/v1/matches?limit=5&start=10000
+  body: none
+  auth: none
+}
+
+query {
+  limit: 5
+  start: 10000
+}

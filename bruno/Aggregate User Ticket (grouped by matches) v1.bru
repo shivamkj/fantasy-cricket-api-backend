@@ -1,0 +1,15 @@
+meta {
+  name: Aggregate User Ticket (grouped by matches) v1
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{BaseURL}}/v1/users/{{userId}}/tickets
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  userId: 102275
+}

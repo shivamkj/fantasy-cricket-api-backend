@@ -1,0 +1,15 @@
+meta {
+  name: Get Last 6 Balls v1
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{BaseURL}}/v1/matches/{{matchId}}/last-6-balls
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  matchId: 10002
+}
