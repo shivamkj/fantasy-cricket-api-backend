@@ -1,0 +1,25 @@
+# Location: /etc/systemd/system/node-server.service
+# Config for Ubuntu/Debian based system
+
+[Unit]
+Description=NodeJS Server
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/node src/index.js
+WorkingDirectory=/home/ubuntu/app/node-backend/
+Type=simple
+Restart=on-failure
+RestartSec=10
+User=ubuntu
+Group=ubuntu
+# Configure Environment Variables
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+# Configure Logging
+StandardOutput=append:/var/log/nd-sv/log.log
+StandardError=append:/var/log/nd-sv/error.log
+SyslogIdentifier=nd-sv
+
+[Install]
+WantedBy=multi-user.target
