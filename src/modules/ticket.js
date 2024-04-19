@@ -1,18 +1,12 @@
-import { ClientErr } from '../fastify.js'
-import { pool } from '../postgres.js'
+import { ClientErr } from '../utils/fastify.js'
+import { pool } from '../utils/postgres.js'
 
 export const ticketTypes = {
   batting: 'batting',
   bowling: 'bowling',
   overall: 'overall',
 }
-
-export async function buyTicketV1(request, reply) {
-  const matchId = request.params.matchId
-  if (!matchId) throw new ClientErr('matchId not passed')
-
-  reply.send({ hello: 'world' })
-}
+export const ticketTypeArr = [ticketTypes.batting, ticketTypes.bowling, ticketTypes.overall]
 
 export async function listUserTicketV1(request, reply) {
   const matchId = request.params.matchId
@@ -25,7 +19,7 @@ export async function listUserTicketV1(request, reply) {
 SELECT
   t.match_id,
   t.ticket_type,
-  t.price,
+  t.total_bet as price,
   CONCAT(t1.team_name, ' vs ', t2.team_name) AS title,
   65 AS payout,
   t1.logo AS t1logo,

@@ -1,5 +1,5 @@
-import { NotFound, ClientErr } from '../fastify.js'
-import { pool } from '../postgres.js'
+import { NotFound, ClientErr } from '../utils/fastify.js'
+import { pool } from '../utils/postgres.js'
 
 export async function getLast6BallsV1(request, reply) {
   const matchId = request.params.matchId
@@ -21,12 +21,12 @@ export async function getScoreCardV1(request, reply) {
   const matchId = request.params.matchId
   if (!matchId) throw new ClientErr('matchId not passed')
 
-  // Get IDs of teams
-  const { rows: teams } = await pool.query('SELECT team1_id, team2_id FROM match WHERE id = $1', [matchId])
-  if (teams.length == 0) throw new NotFound('match')
-  const { team1_id: team1Id, team2_id: team2Id } = teams[0]
+  const client = await pool.connect()
+  try {
+    // Get IDs of teams
+    const { team1Id, team2Id } = await getTeamsId(matchId, client)
 
-  const battersQuery = `
+    const battersQuery = `
 SELECT
   p.first_name AS first_name,
   p.last_name AS last_name,
@@ -41,11 +41,29 @@ JOIN
   player p ON bbs.batter = p.id
 WHERE bbs.match_id = $1 AND bbs.teamid = $2
 GROUP BY p.id;
-`
-  const { rows: team1Batters } = await pool.query(battersQuery, [matchId, team1Id])
-  const { rows: team2Batters } = await pool.query(battersQuery, [matchId, team2Id])
+ `
+    const { rows: team1Batters } = await client.query(battersQuery, [matchId, team1Id])
+    const { rows: team2Batters } = await client.query(battersQuery, [matchId, team2Id])
 
-  const extrasQuery = `
+    const bowlersQuery = `
+SELECT
+  p.first_name AS first_name,
+  p.last_name AS last_name,
+  ROUND(COUNT(bbs.ball) / 6.0, 1) AS overs,
+  SUM(CASE WHEN runs_off_bat = 0 AND wide = 0 AND noball = 0 THEN 1 ELSE 0 END) AS maiden,
+  SUM(bbs.runs_off_bat + COALESCE(bbs.extra, 0)) AS run,
+  COUNT(bbs.wicket) AS wicket,
+  ROUND(SUM(bbs.runs_off_bat + COALESCE(bbs.extra, 0)) / (COUNT(bbs.ball) / 6.0), 2) AS economy
+FROM ball_by_ball_score bbs
+JOIN player p ON bbs.bowler = p.id
+WHERE match_id = $1 AND teamid = $2
+GROUP BY p.id;  
+`
+
+    const { rows: team1Bowlers } = await client.query(bowlersQuery, [matchId, team1Id])
+    const { rows: team2Bowlers } = await client.query(bowlersQuery, [matchId, team2Id])
+
+    const extrasQuery = `
 SELECT
   COUNT(bye) AS bye,
   COUNT(legbye) AS legbye,
@@ -53,31 +71,44 @@ SELECT
   COUNT(noball) AS noball
 FROM ball_by_ball_score
 WHERE match_id = $1 AND teamid = $2;
-`
-  const { rows: team1Extras } = await pool.query(extrasQuery, [matchId, team1Id])
-  const { rows: team2Extras } = await pool.query(extrasQuery, [matchId, team2Id])
+ `
+    const { rows: team1Extras } = await client.query(extrasQuery, [matchId, team1Id])
+    const { rows: team2Extras } = await client.query(extrasQuery, [matchId, team2Id])
 
-  const totalQuery = `
+    const totalQuery = `
 SELECT
   SUM(runs_off_bat) AS run,
   COUNT(wicket) AS wicket,
   MAX(ball) AS over
 FROM ball_by_ball_score
 WHERE match_id = $1 AND teamid = $2;
-`
-  const { rows: team1Total } = await pool.query(totalQuery, [matchId, team1Id])
-  const { rows: team2Total } = await pool.query(totalQuery, [matchId, team2Id])
+ `
+    const { rows: team1Total } = await client.query(totalQuery, [matchId, team1Id])
+    const { rows: team2Total } = await client.query(totalQuery, [matchId, team2Id])
 
-  reply.send([
-    {
-      batters: team1Batters,
-      extras: team1Extras[0],
-      total: team1Total[0],
-    },
-    {
-      batters: team2Batters,
-      extras: team2Extras[0],
-      total: team2Total[0],
-    },
-  ])
+    reply.send([
+      {
+        batters: team1Batters,
+        bowlers: team1Bowlers,
+        extras: team1Extras[0],
+        total: team1Total[0],
+      },
+      {
+        batters: team2Batters,
+        bowlers: team2Bowlers,
+        extras: team2Extras[0],
+        total: team2Total[0],
+      },
+    ])
+  } catch (e) {
+    throw e
+  } finally {
+    client.release()
+  }
+}
+
+export async function getTeamsId(matchId, client) {
+  const { rows: teams } = await client.query('SELECT team1_id, team2_id FROM match WHERE id = $1', [matchId])
+  if (teams.length == 0) throw new NotFound('match')
+  return { team1Id: teams[0].team1_id, team2Id: teams[0].team2_id }
 }

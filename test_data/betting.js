@@ -1,7 +1,7 @@
-import { liveMatches, matchStartId, randomTeams, totalMatches } from './matches.js'
+import { liveMatches, matchStartId, totalMatches } from './matches.js'
 import { v4 as uuidv4 } from 'uuid'
 import { knex, randomBool } from './utils.js'
-import { ticketTypes } from '../src/modules/ticket.js'
+import { ticketTypeArr } from '../src/modules/ticket.js'
 import { randomInt } from './utils.js'
 
 const lobbies = [
@@ -33,8 +33,6 @@ export async function createUsers() {
   await knex('_user').insert(users)
 }
 
-const ticketTypeArr = [ticketTypes.batting, ticketTypes.bowling, ticketTypes.overall]
-
 export async function createTicket() {
   const tickets = []
   for (let index = 0; index < liveMatches; index++) {
@@ -48,11 +46,27 @@ export async function createTicket() {
         ticket_type: ticketTypeArr[randomInt(0, 2)],
         team1_id: team.team1_id,
         team2_id: team.team2_id,
-        price: randomInt(200, 999),
+        ticket_price: randomInt(200, 999),
+        total_bet: randomInt(200, 999),
         transaction_id: uuidv4(),
         pay_confirmed: randomBool(),
       })
     }
   }
   await knex('ticket').insert(tickets)
+}
+
+export async function createBetPrice() {
+  const betPrices = []
+  const prices = [50, 80, 100, 150]
+  const commissions = [0, 10, 20]
+  for (let index = 0; index < liveMatches; index++) {
+    const ticketCount = randomInt(2, 8)
+    const matchId = betPrices.push({
+      match_id: matchStartId + index,
+      price: prices[randomInt(0, 3)],
+      commission: commissions[randomInt(0, 2)],
+    })
+  }
+  await knex('bet_price').insert(betPrices)
 }

@@ -1,5 +1,5 @@
-import { pool } from '../postgres.js'
-import { ClientErr } from '../fastify.js'
+import { ClientErr } from '../utils/fastify.js'
+import { pool } from '../utils/postgres.js'
 
 export async function listMatchesV1(request, reply) {
   const start = request.query.start ?? 0
@@ -22,21 +22,29 @@ FROM "match" m
   JOIN team t2 ON m.team2_id = t2.id
 WHERE m.id > $1 LIMIT $2;
 `
-  const { rows: allMatch } = await pool.query(sqlQuery, [start, limit])
 
-  for (const match of allMatch) {
-    if (match.live) {
-      match['t1Score'] = await getMatchScore(match.id, match.t1id)
-      match['t2Score'] = await getMatchScore(match.id, match.t2id)
+  const client = await pool.connect()
+  try {
+    const { rows: allMatch } = await client.query(sqlQuery, [start, limit])
+
+    for (const match of allMatch) {
+      if (match.live) {
+        match['t1Score'] = await getMatchScore(match.id, match.t1id, client)
+        match['t2Score'] = await getMatchScore(match.id, match.t2id, client)
+      }
+      delete match.t1id
+      delete match.t2id
     }
-    delete match.t1id
-    delete match.t2id
-  }
 
-  reply.send(allMatch)
+    reply.send(allMatch)
+  } catch (e) {
+    throw e
+  } finally {
+    client.release()
+  }
 }
 
-async function getMatchScore(matchId, teamId) {
+async function getMatchScore(matchId, teamId, client) {
   const scoreQuery = `
 SELECT
   SUM(runs_off_bat) AS run,
@@ -45,7 +53,7 @@ SELECT
 FROM ball_by_ball_score
 WHERE match_id = $1 AND teamid = $2;
 `
-  const { rows: score } = await pool.query(scoreQuery, [matchId, teamId])
+  const { rows: score } = await client.query(scoreQuery, [matchId, teamId])
   return score[0]
 }
 

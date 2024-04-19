@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import 'dotenv/config'
-import { fastify } from './fastify.js'
-import { pool } from './postgres.js'
+import { fastify } from './utils/fastify.js'
+import { pool } from './utils/postgres.js'
 import './routes.js'
 
 const PORT = process.env.PORT || 3003
