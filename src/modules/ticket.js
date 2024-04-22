@@ -17,6 +17,7 @@ export async function listUserTicketV1(request, reply) {
 
   const sqlQuery = `
 SELECT
+  t.id,
   t.match_id,
   t.ticket_type,
   t.total_bet as price,

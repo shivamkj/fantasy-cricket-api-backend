@@ -13,4 +13,4 @@ fastify.get('/v1/matches/:matchId/tickets', listUserTicketV1)
 fastify.get('/v1/users/:userId/tickets', aggregateUserTicketV1)
 
 fastify.get('/v1/matches/:matchId/bet', getBetPriceV1)
-fastify.post('/v1/matches/:matchId/bet', buyBetV1)
+fastify.post('/v1/matches/:matchId/ticket', buyBetV1)

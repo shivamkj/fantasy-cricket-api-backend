@@ -100,7 +100,7 @@ RETURNING id;
     await client.query(`INSERT INTO bet(ticket_id, bet, bet_type, player_id) VALUES ${query.join(', ')};`, betValues)
 
     await client.query('COMMIT')
-    reply.send({ hello: validateBetReq(request.body), body: request.body, rows })
+    reply.send({ success: true, ticketId })
   } catch (e) {
     await client.query('ROLLBACK')
     throw e

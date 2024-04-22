@@ -63,7 +63,7 @@ export async function getLobbyV1(request, reply) {
 
   const sqlQuery = `
 SELECT
-  title, price, playing_count
+  id, title, price, playing_count
 FROM lobby
 WHERE match_id = $1
 ORDER BY price;
