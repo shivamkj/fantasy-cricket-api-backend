@@ -12,6 +12,7 @@ export const betType = {
   economy: 'economy',
   teamRun: 'teamRun',
   boundaries: 'boundaries',
+  batterWicket: 'batterWicket',
 }
 export const betTypeArr = [
   betType.batterRun,
@@ -21,6 +22,7 @@ export const betTypeArr = [
   betType.economy,
   betType.teamRun,
   betType.boundaries,
+  betType.batterWicket,
 ]
 
 const betReqBody = {
