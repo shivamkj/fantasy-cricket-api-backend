@@ -84,9 +84,9 @@ WHERE match_id = $1 AND team_id = $2;
 
     const totalQuery = `
 SELECT
-  SUM(runs_off_bat) AS run,
+  COALESCE(SUM(runs_off_bat), 0) AS run,
   COUNT(wicket) AS wicket,
-  MAX(ball) AS over
+  COALESCE(MAX(ball), 0) AS over
 FROM ball_by_ball_score
 WHERE match_id = $1 AND team_id = $2;
 `
@@ -97,26 +97,22 @@ WHERE match_id = $1 AND team_id = $2;
     const { rows: team1Details } = await client.query(teamQuery, [team1Id])
     const { rows: team2Details } = await client.query(teamQuery, [team2Id])
 
-    const scoreCard = []
-    if (team1Batters.length != 0) {
-      scoreCard.push({
+    reply.send([
+      {
         ...team1Details[0],
         batters: team1Batters,
         bowlers: team1Bowlers,
         extras: team1Extras[0],
         total: team1Total[0],
-      })
-    }
-    if (team2Batters.length != 0) {
-      scoreCard.push({
+      },
+      {
         ...team2Details[0],
         batters: team2Batters,
         bowlers: team2Bowlers,
         extras: team2Extras[0],
         total: team2Total[0],
-      })
-    }
-    reply.send(scoreCard)
+      },
+    ])
   } catch (e) {
     throw e
   } finally {
