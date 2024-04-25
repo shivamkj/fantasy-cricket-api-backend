@@ -6,21 +6,25 @@ export async function listMatchesV1(request, reply) {
   const limit = request.query.limit ?? 10
 
   const sqlQuery = `
-SELECT
+  SELECT
   m.id,
-  m.team1_id AS t1Id,
-  t1.team_name AS t1Name,
-  t1.logo AS t1Logo,
-  m.team2_id AS t2Id,
-  t2.team_name AS t2Name,
-  t2.logo AS t2Logo,
+  m.team1_id AS t1id,
+  t1.team_name AS t1name,
+  t1.code AS t1code,
+  t1.logo AS t1logo,
+  m.team2_id AS t2id,
+  t2.team_name AS t2name,
+  t2.code AS t2code,
+  t2.logo AS t2logo,
   m.live,
   m.start_time,
   m.league
 FROM "match" m
-  JOIN team t1 ON m.team1_id = t1.id
-  JOIN team t2 ON m.team2_id = t2.id
-WHERE m.id > $1 LIMIT $2;
+JOIN team t1 ON m.team1_id = t1.id
+JOIN team t2 ON m.team2_id = t2.id
+WHERE m.id > $1
+ORDER BY m.live DESC, m.start_time DESC
+LIMIT $2;
 `
 
   const client = await pool.connect()
@@ -47,11 +51,11 @@ WHERE m.id > $1 LIMIT $2;
 async function getMatchScore(matchId, teamId, client) {
   const scoreQuery = `
 SELECT
-  SUM(runs_off_bat) AS run,
+  COALESCE(SUM(runs_off_bat), 0) AS run,
   COUNT(wicket) AS wicket,
-  MAX(ball) AS over
+  COALESCE(MAX(ball), 0) AS over
 FROM ball_by_ball_score
-WHERE match_id = $1 AND teamid = $2;
+WHERE match_id = $1 AND team_id = $2;
 `
   const { rows: score } = await client.query(scoreQuery, [matchId, teamId])
   return score[0]
@@ -63,7 +67,7 @@ export async function getLobbyV1(request, reply) {
 
   const sqlQuery = `
 SELECT
-  id, title, price, playing_count
+  id, title, price, playing_count, currency_type as type
 FROM lobby
 WHERE match_id = $1
 ORDER BY price;

@@ -7,7 +7,7 @@ await matches.createTeams()
 await matches.createMatches()
 
 await ballByBallData.createPlayers()
-await ballByBallData.createBallByBallData()
+// await ballByBallData.createBallByBallData()
 
 await betting.createLobby()
 await betting.createUsers()

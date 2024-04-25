@@ -1,19 +1,26 @@
 import { NotFound, ClientErr } from '../utils/fastify.js'
 import { pool } from '../utils/postgres.js'
 
-export async function getLast6BallsV1(request, reply) {
+export async function getCurrentOverBallsV1(request, reply) {
   const matchId = request.params.matchId
   if (!matchId) throw new ClientErr('matchId not passed')
 
   const last6BallsQuery = `
 SELECT
-  (COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS run, wicket
+  ball, (COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS run, wicket
 FROM ball_by_ball_score
 WHERE match_id = $1
 ORDER BY ball DESC LIMIT 6;
 `
-
+  // Process to filter current over balls only
   const { rows: balls } = await pool.query(last6BallsQuery, [matchId])
+  if (balls.length == 0) throw new NotFound('match not started or invalid match id')
+  const currentOver = Math.trunc(balls[0].ball)
+  var ballCount = balls.length
+  while (ballCount--) {
+    if (Math.trunc(balls[ballCount].ball) != currentOver) balls.splice(ballCount, 1)
+  }
+  balls.reverse()
   reply.send(balls)
 }
 
@@ -39,9 +46,9 @@ FROM
   ball_by_ball_score bbs
 JOIN
   player p ON bbs.batter = p.id
-WHERE bbs.match_id = $1 AND bbs.teamid = $2
+WHERE bbs.match_id = $1 AND bbs.team_id = $2
 GROUP BY p.id;
- `
+`
     const { rows: team1Batters } = await client.query(battersQuery, [matchId, team1Id])
     const { rows: team2Batters } = await client.query(battersQuery, [matchId, team2Id])
 
@@ -56,7 +63,7 @@ SELECT
   ROUND(SUM(bbs.runs_off_bat + COALESCE(bbs.extra, 0)) / (COUNT(bbs.ball) / 6.0), 2) AS economy
 FROM ball_by_ball_score bbs
 JOIN player p ON bbs.bowler = p.id
-WHERE match_id = $1 AND teamid = $2
+WHERE match_id = $1 AND team_id = $2
 GROUP BY p.id;  
 `
 
@@ -70,8 +77,8 @@ SELECT
   COUNT(wide) AS wide,
   COUNT(noball) AS noball
 FROM ball_by_ball_score
-WHERE match_id = $1 AND teamid = $2;
- `
+WHERE match_id = $1 AND team_id = $2;
+`
     const { rows: team1Extras } = await client.query(extrasQuery, [matchId, team1Id])
     const { rows: team2Extras } = await client.query(extrasQuery, [matchId, team2Id])
 
@@ -81,25 +88,35 @@ SELECT
   COUNT(wicket) AS wicket,
   MAX(ball) AS over
 FROM ball_by_ball_score
-WHERE match_id = $1 AND teamid = $2;
- `
+WHERE match_id = $1 AND team_id = $2;
+`
     const { rows: team1Total } = await client.query(totalQuery, [matchId, team1Id])
     const { rows: team2Total } = await client.query(totalQuery, [matchId, team2Id])
 
-    reply.send([
-      {
+    const teamQuery = 'SELECT code FROM team WHERE id = $1;'
+    const { rows: team1Details } = await client.query(teamQuery, [team1Id])
+    const { rows: team2Details } = await client.query(teamQuery, [team2Id])
+
+    const scoreCard = []
+    if (team1Batters.length != 0) {
+      scoreCard.push({
+        ...team1Details[0],
         batters: team1Batters,
         bowlers: team1Bowlers,
         extras: team1Extras[0],
         total: team1Total[0],
-      },
-      {
+      })
+    }
+    if (team2Batters.length != 0) {
+      scoreCard.push({
+        ...team2Details[0],
         batters: team2Batters,
         bowlers: team2Bowlers,
         extras: team2Extras[0],
         total: team2Total[0],
-      },
-    ])
+      })
+    }
+    reply.send(scoreCard)
   } catch (e) {
     throw e
   } finally {

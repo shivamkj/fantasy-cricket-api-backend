@@ -1,3 +1,45 @@
+export const betType = {
+  batterRun: 'batterRun',
+  runRate: 'runRate',
+  bowlerRun: 'bowlerRun',
+  wicket: 'wicket',
+  economy: 'economy',
+  teamRun: 'teamRun',
+  boundaries: 'boundaries',
+  batterWicket: 'batterWicket',
+}
+export const betTypeArr = [
+  betType.batterRun,
+  betType.runRate,
+  betType.bowlerRun,
+  betType.wicket,
+  betType.economy,
+  betType.teamRun,
+  betType.boundaries,
+  betType.batterWicket,
+]
+
+export const ticketTypes = {
+  batting: 'batting',
+  bowling: 'bowling',
+  overall: 'overall',
+}
+export const ticketTypeArr = [ticketTypes.batting, ticketTypes.bowling, ticketTypes.overall]
+
+export const currencyType = {
+  coin: 'coin',
+  token: 'token',
+  money: 'money',
+}
+export const currencyTypeArr = [currencyType.coin, currencyType.token, currencyType.money]
+
+export const ballRanges = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+export const getBallRange = (rangeId) => {
+  const endRange = rangeId - 1 + 0.6
+  return [parseFloat((endRange - 4.5).toFixed(2)), endRange]
+}
+
 export const batterRunBets = {
   5: { start: 0, end: 5 },
   10: { start: 6, end: 10 },

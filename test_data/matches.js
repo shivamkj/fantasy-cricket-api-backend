@@ -1,17 +1,18 @@
 import { knex } from './utils.js'
 import { randomDate, randomInt } from './utils.js'
 
+const baseURLLogo = 'https://yfiotzbqlesommmuhbwv.supabase.co/storage/v1/object/public/test.internal.public/'
 export const allTeams = [
-  { id: 1, team_name: 'Chennai Super Kings', logo: 'CSK.webp' },
-  { id: 4, team_name: 'Delhi Capitals', logo: 'DC.webp' },
-  { id: 7, team_name: 'Kolkata Knight Riders', logo: 'KKR.png' },
-  { id: 9, team_name: 'Punjab Kings', logo: 'PK.webp' },
-  { id: 12, team_name: 'Mumbai Indians', logo: 'MI.webp' },
-  { id: 15, team_name: 'Sunrisers Hyderabad', logo: 'SRH.png' },
-  { id: 18, team_name: 'Rajasthan Royals', logo: 'RR.webp' },
-  { id: 20, team_name: 'Royal Challengers Bengaluru', logo: 'RCB.png' },
-  { id: 25, team_name: 'Gujarat Titans', logo: 'GT.webp' },
-  { id: 28, team_name: 'Lucknow Super Giants', logo: 'LSG.webp' },
+  { id: 1, team_name: 'Chennai Super Kings', code: 'CSK', logo: `${baseURLLogo}CSK.webp` },
+  { id: 4, team_name: 'Delhi Capitals', code: 'DC', logo: `${baseURLLogo}DC.webp` },
+  { id: 7, team_name: 'Kolkata Knight Riders', code: 'KKR', logo: `${baseURLLogo}KKR.png` },
+  { id: 9, team_name: 'Punjab Kings', code: 'PK', logo: `${baseURLLogo}PK.webp` },
+  { id: 12, team_name: 'Mumbai Indians', code: 'MI', logo: `${baseURLLogo}MI.webp` },
+  { id: 15, team_name: 'Sunrisers Hyderabad', code: 'SRH', logo: `${baseURLLogo}SRH.png` },
+  { id: 18, team_name: 'Rajasthan Royals', code: 'RR', logo: `${baseURLLogo}RR.webp` },
+  { id: 20, team_name: 'Royal Challengers Bengaluru', code: 'RCB', logo: `${baseURLLogo}RCB.png` },
+  { id: 25, team_name: 'Gujarat Titans', code: 'GT', logo: `${baseURLLogo}GT.webp` },
+  { id: 28, team_name: 'Lucknow Super Giants', code: 'LSG', logo: `${baseURLLogo}LSG.webp` },
 ]
 
 export async function createTeams() {
@@ -41,9 +42,6 @@ export async function createMatches() {
     })
   }
 
-  for (let index = 0; index < liveMatches; index++) {
-    matches[index]['live'] = true
-  }
   await knex('match').insert(matches)
 }
 

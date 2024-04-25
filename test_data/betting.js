@@ -1,15 +1,16 @@
 import { liveMatches, matchStartId, totalMatches } from './matches.js'
 import { v4 as uuidv4 } from 'uuid'
 import { knex, randomBool } from './utils.js'
-import { ticketTypeArr } from '../src/modules/ticket.js'
+import { ticketTypeArr, currencyTypeArr } from '../src/modules/constants.js'
 import { randomInt } from './utils.js'
 
 const lobbies = [
-  { title: 'Star 50', price: 50 },
-  { title: 'Legend 100', price: 100 },
-  { title: 'High Stakes', price: 200 },
-  { title: 'Social Lobby', price: 150 },
-  { title: 'Private Lobby', price: 0 },
+  { title: 'Star 50', price: 50, currency_type: currencyTypeArr[0] },
+  { title: 'Legend 100', price: 100, currency_type: currencyTypeArr[1] },
+  { title: 'High Stakes', price: 200, currency_type: currencyTypeArr[0] },
+  { title: 'Social Lobby', price: 150, currency_type: currencyTypeArr[2] },
+  { title: 'Social Lobby', price: 250, currency_type: currencyTypeArr[2] },
+  { title: 'Private Lobby', price: 50, currency_type: currencyTypeArr[2] },
 ]
 
 export async function createLobby() {
@@ -44,8 +45,8 @@ export async function createTicket() {
         match_id: matchId,
         user_id: users[randomBool() ? 0 : 1].id,
         ticket_type: ticketTypeArr[randomInt(0, 2)],
-        team1_id: team.team1_id,
-        team2_id: team.team2_id,
+        team_id: randomBool() ? team.team1_id : team.team2_id,
+        ball_range_id: randomBool() ? 5 : 10,
         ticket_price: randomInt(200, 999),
         total_bet: randomInt(200, 999),
         transaction_id: uuidv4(),

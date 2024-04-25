@@ -19,6 +19,7 @@ fastify.setErrorHandler((err, _, reply) => {
   if (PROD) {
     reply.status(500).send({ error: 'Internal Server Error' })
   } else {
+    console.log(err)
     reply.status(500).send({ error: err.message })
   }
 })
