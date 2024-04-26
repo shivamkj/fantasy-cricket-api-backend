@@ -121,7 +121,7 @@ WHERE match_id = $1 AND team_id = $2;
 }
 
 export async function getTeamsId(matchId, client) {
-  const { rows: teams } = await client.query('SELECT team1_id, team2_id FROM match WHERE id = $1', [matchId])
+  const { rows: teams } = await (client ?? pool).query('SELECT team1_id, team2_id FROM match WHERE id = $1', [matchId])
   if (teams.length == 0) throw new NotFound('match')
   return { team1Id: teams[0].team1_id, team2Id: teams[0].team2_id }
 }

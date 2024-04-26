@@ -36,7 +36,7 @@ CREATE TABLE ball_by_ball_score (
   batter       INTEGER NOT NULL REFERENCES player (id),
   bowler       INTEGER NOT NULL REFERENCES player (id),
   ball         NUMERIC(4, 1) NOT NULL,
-  team_id       SMALLINT NOT NULL,
+  team_id      SMALLINT NOT NULL,
   runs_off_bat SMALLINT,
   extra        SMALLINT,
   wide         SMALLINT,
@@ -58,7 +58,7 @@ CREATE TABLE lobby (
   title         TEXT NOT NULL,
   price         SMALLINT NOT NULL,
   match_id      INTEGER NOT NULL REFERENCES match (id),
-  currency_type    CURRENCY_TYPES NOT NULL,
+  currency_type CURRENCY_TYPES NOT NULL,
   playing_count INTEGER DEFAULT 0
 );
 
@@ -78,7 +78,7 @@ CREATE TABLE ticket (
 );
 
 CREATE TYPE bet_type AS ENUM (
-  'batterRun', 'runRate', 'bowlerRun', 'wicket', 'economy', 'teamRun', 'boundaries'
+  'batterRun', 'runRate', 'bowlerRun', 'wicket', 'economy', 'teamRun', 'boundaries', 'batterWicket'
 );
 
 CREATE TABLE bet_price (

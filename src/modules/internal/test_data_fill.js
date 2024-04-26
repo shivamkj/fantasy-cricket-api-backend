@@ -1,13 +1,13 @@
-import { match1Innings1, match1Innings2 } from '../../test_data/ball_by_ball_data/match1.js'
-import { match2Innings1, match2Innings2 } from '../../test_data/ball_by_ball_data/match2.js'
-import { match3Innings1, match3Innings2 } from '../../test_data/ball_by_ball_data/match3.js'
-import { match4Innings1, match4Innings2 } from '../../test_data/ball_by_ball_data/match4.js'
-import { match5Innings1, match5Innings2 } from '../../test_data/ball_by_ball_data/match5.js'
-import { matchStartId } from '../../test_data/matches.js'
-import { ClientErr } from '../utils/fastify.js'
-import { pool } from '../utils/postgres.js'
-import { getBallRange } from './constants.js'
-import { getTeamsId } from './score_card.js'
+import { match1Innings1, match1Innings2 } from '../../../test_data/ball_by_ball_data/match1.js'
+import { match2Innings1, match2Innings2 } from '../../../test_data/ball_by_ball_data/match2.js'
+import { match3Innings1, match3Innings2 } from '../../../test_data/ball_by_ball_data/match3.js'
+import { match4Innings1, match4Innings2 } from '../../../test_data/ball_by_ball_data/match4.js'
+import { match5Innings1, match5Innings2 } from '../../../test_data/ball_by_ball_data/match5.js'
+import { matchStartId } from '../../../test_data/matches.js'
+import { ClientErr } from '../../utils/fastify.js'
+import { pool } from '../../utils/postgres.js'
+import { getBallRange } from '../constants.js'
+import { getTeamsId } from '../score_card.js'
 
 export async function startMatch(request, reply) {
   const matchId = request.params.matchId

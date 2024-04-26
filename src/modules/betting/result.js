@@ -1,100 +1,137 @@
-import { pool } from '../../utils/postgres'
+import { Cache } from '../../utils/cache.js'
+import { pool } from '../../utils/postgres.js'
+import { betType, betValToRangeId, getBallRange } from '../constants.js'
 
-export const betTypeArr = [
-  betType.batterRun,
-  betType.runRate,
-  betType.bowlerRun,
-  betType.wicket,
-  betType.economy,
-  betType.teamRun,
-  betType.boundaries,
-  betType.batterWicket,
-]
+export const allResults = async (matchId, ballRangeId, teamId) => {
+  const cacheKey = `${matchId},${ballRangeId},${teamId}`
+  const value = Cache.get(cacheKey)
+  if (value) return value
 
-// Test Params: matchId: 10000 AND batter: 12297
-export const getBatterRun = async (matchId, batterId) => {
-  const query = `
-SELECT SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS runs FROM ball_by_ball_score
-WHERE match_id = $1 AND batter = $1 AND ball >= 6.1 AND ball <= 10.6
+  const batterListQuery = `
+SELECT DISTINCT batter FROM ball_by_ball_score
+WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
 `
-  const { rows } = await pool.query(query, [matchId, batterId])
-  return { runs: rows[0].runs }
+  const { rows: allBatters } = await pool.query(batterListQuery, [matchId, teamId, ...getBallRange(ballRangeId)])
+  const bowlerListQuery = `
+SELECT DISTINCT bowler FROM ball_by_ball_score
+WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
+`
+  const { rows: allBowlers } = await pool.query(bowlerListQuery, [matchId, teamId, ...getBallRange(ballRangeId)])
+
+  const battersRun = {}
+  for (const { batter } of allBatters) {
+    const value = await getBatterRun(matchId, ballRangeId, batter)
+    battersRun[batter] = { value, id: betValToRangeId(betType.batterRun, value) }
+  }
+
+  const bowlersRun = {}
+  for (const { bowler } of allBowlers) {
+    const value = await getBowlersRun(matchId, ballRangeId, bowler)
+    bowlersRun[bowler] = { value, id: betValToRangeId(betType.bowlerRun, value) }
+  }
+
+  const batterWicket = {}
+  for (const { batter } of allBatters) {
+    const value = await getBatterWicket(matchId, ballRangeId, batter)
+    batterWicket[batter] = { value, id: betValToRangeId(betType.batterWicket, value) }
+  }
+
+  const runRate = await getRunRate(matchId, ballRangeId, teamId)
+  const wicket = await getWicket(matchId, ballRangeId, teamId)
+  const economy = await getEconomy(matchId, ballRangeId, teamId)
+  const teamRun = await getTeamRun(matchId, ballRangeId, teamId)
+  const boundaries = await getBoundaries(matchId, ballRangeId, teamId)
+
+  const result = {
+    [betType.batterRun]: battersRun,
+    [betType.bowlerRun]: bowlersRun,
+    [betType.batterWicket]: batterWicket,
+    [betType.runRate]: { value: runRate, id: betValToRangeId(betType.runRate, runRate) },
+    [betType.wicket]: { value: wicket, id: betValToRangeId(betType.wicket, wicket) },
+    [betType.economy]: { value: economy, id: betValToRangeId(betType.economy, economy) },
+    [betType.teamRun]: { value: teamRun, id: betValToRangeId(betType.teamRun, teamRun) },
+    [betType.boundaries]: { value: boundaries, id: betValToRangeId(betType.boundaries, boundaries) },
+  }
+
+  Cache.set(cacheKey, result)
+  return result
 }
 
-// Test Params: matchId: 10000 AND bowler: 12148
-export const getBowlersRun = async (matchId, bowlerId) => {
+export const getBatterRun = async (matchId, ballRangeId, batterId) => {
   const query = `
 SELECT SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS runs FROM ball_by_ball_score
-WHERE match_id = $1 AND bowler = $2 AND ball >= 6.1 AND ball <= 10.6
+WHERE match_id = $1 AND batter = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, bowlerId])
-  return { runs: rows[0].runs }
+  const { rows } = await pool.query(query, [matchId, batterId, ...getBallRange(ballRangeId)])
+  return rows[0].runs
 }
 
-// Test Params: matchId: 10000 AND teamId: 18
-export const getRunRate = async (matchId, teamId) => {
+export const getBowlersRun = async (matchId, ballRangeId, bowlerId) => {
+  const query = `
+SELECT SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS runs FROM ball_by_ball_score
+WHERE match_id = $1 AND bowler = $2 AND ball >= $3 AND ball <= $4
+`
+  const { rows } = await pool.query(query, [matchId, bowlerId, ...getBallRange(ballRangeId)])
+  return rows[0].runs
+}
+
+// Run rate = runs scored / Overs bowled
+export const getRunRate = async (matchId, ballRangeId, teamId) => {
   const query = `
 SELECT SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS runs, MAX(ball) as balls
-FROM ball_by_ball_score WHERE match_id = $1 AND teamid = $2 AND ball >= 6.1 AND ball <= 10.6
+FROM ball_by_ball_score WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, teamId])
+  const { rows } = await pool.query(query, [matchId, teamId, ...getBallRange(ballRangeId)])
   const completedOvers = Math.trunc(rows[0].balls)
   const runRate = rows[0].runs / (completedOvers + (rows[0].balls - completedOvers + 1) / 6)
-  return { runRate }
+  return runRate
 }
 
-// Run rate = runs scored / number of overs bowled
-export const getWicket = async (matchId, teamId) => {
+export const getWicket = async (matchId, ballRangeId, teamId) => {
   const query = `
 SELECT COUNT(wicket) AS wickets FROM ball_by_ball_score
-WHERE match_id = $1 AND teamid = $2 AND ball >= 0.1 AND ball <= 5.6
+WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, teamId])
-  const completedOvers = Math.trunc(rows[0].balls)
-  const runRate = rows[0].runs / (completedOvers + (rows[0].balls - completedOvers + 1) / 6)
-  return { runRate }
+  const { rows } = await pool.query(query, [matchId, teamId, ...getBallRange(ballRangeId)])
+  return rows[0].wickets
 }
 
 // Economy = Runs conceded / Overs bowled
-// Run rate = runs scored / number of overs bowled
-export const getEconomy = async (matchId, teamId) => {
+export const getEconomy = async (matchId, ballRangeId, teamId) => {
   const query = `
 SELECT SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS runs, COUNT(*) as balls
-FROM ball_by_ball_score WHERE match_id = $1 AND teamid = $2 AND ball >= 6.1 AND ball <= 10.6
+FROM ball_by_ball_score WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, teamId])
+  const { rows } = await pool.query(query, [matchId, teamId, ...getBallRange(ballRangeId)])
   const completedOvers = Math.trunc(rows[0].balls)
   const economy = rows[0].runs / (completedOvers + (rows[0].balls - completedOvers + 1) / 6)
-  return { economy }
+  return economy
 }
 
-// Test Params: matchId: 10000 AND teamId: 18
-export const getTeamRun = async (matchId, teamId) => {
+export const getTeamRun = async (matchId, ballRangeId, teamId) => {
   const query = `
 SELECT SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS runs FROM ball_by_ball_score
-WHERE match_id = $1 AND teamid = $2 AND ball >= 0.1 AND ball <= 5.6
+WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, teamId])
-  return { runs: rows[0].runs }
+  const { rows } = await pool.query(query, [matchId, teamId, ...getBallRange(ballRangeId)])
+  return rows[0].runs
 }
 
-// Test Params: matchId: 10000 AND teamId: 18
-export const getBoundaries = async (matchId, teamId) => {
+export const getBoundaries = async (matchId, ballRangeId, teamId) => {
   const query = `
 SELECT COUNT(six) AS sixes, COUNT(four) AS fours FROM ball_by_ball_score
-WHERE match_id = 10000 AND teamid = 18 AND ball >= 0.1 AND ball <= 5.6
+WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, teamId])
-  return { boundaries: rows[0].sixes + rows[0].fours }
+  const { rows } = await pool.query(query, [matchId, teamId, ...getBallRange(ballRangeId)])
+  return rows[0].sixes + rows[0].fours
 }
 
 // returns true if batter was out else false
-// Test Params: matchId: 10000 AND batter: 12297
-export const getBatterWicket = async (matchId, batterId) => {
+export const getBatterWicket = async (matchId, ballRangeId, batterId) => {
   const query = `
 SELECT COUNT(wicket) as wicket FROM ball_by_ball_score
-WHERE match_id = 10000 AND batter = 12297 AND ball >= 0.1 AND ball <= 5
+WHERE match_id = $1 AND batter = $2 AND ball >= $3 AND ball <= $4
 `
-  const { rows } = await pool.query(query, [matchId, batterId])
-  return { runs: Boolean(rows[0].wicket) }
+  const { rows } = await pool.query(query, [matchId, batterId, ...getBallRange(ballRangeId)])
+  return Boolean(rows[0].wicket)
 }

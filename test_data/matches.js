@@ -3,16 +3,16 @@ import { randomDate, randomInt } from './utils.js'
 
 const baseURLLogo = 'https://yfiotzbqlesommmuhbwv.supabase.co/storage/v1/object/public/test.internal.public/'
 export const allTeams = [
-  { id: 1, team_name: 'Chennai Super Kings', code: 'CSK', logo: `${baseURLLogo}CSK.webp` },
-  { id: 4, team_name: 'Delhi Capitals', code: 'DC', logo: `${baseURLLogo}DC.webp` },
+  { id: 1, team_name: 'Chennai Super Kings', code: 'CSK', logo: `${baseURLLogo}CSK.png` },
+  { id: 4, team_name: 'Delhi Capitals', code: 'DC', logo: `${baseURLLogo}DC.png` },
   { id: 7, team_name: 'Kolkata Knight Riders', code: 'KKR', logo: `${baseURLLogo}KKR.png` },
-  { id: 9, team_name: 'Punjab Kings', code: 'PK', logo: `${baseURLLogo}PK.webp` },
-  { id: 12, team_name: 'Mumbai Indians', code: 'MI', logo: `${baseURLLogo}MI.webp` },
+  { id: 9, team_name: 'Punjab Kings', code: 'PK', logo: `${baseURLLogo}PK.png` },
+  { id: 12, team_name: 'Mumbai Indians', code: 'MI', logo: `${baseURLLogo}MI.png` },
   { id: 15, team_name: 'Sunrisers Hyderabad', code: 'SRH', logo: `${baseURLLogo}SRH.png` },
-  { id: 18, team_name: 'Rajasthan Royals', code: 'RR', logo: `${baseURLLogo}RR.webp` },
+  { id: 18, team_name: 'Rajasthan Royals', code: 'RR', logo: `${baseURLLogo}RR.png` },
   { id: 20, team_name: 'Royal Challengers Bengaluru', code: 'RCB', logo: `${baseURLLogo}RCB.png` },
-  { id: 25, team_name: 'Gujarat Titans', code: 'GT', logo: `${baseURLLogo}GT.webp` },
-  { id: 28, team_name: 'Lucknow Super Giants', code: 'LSG', logo: `${baseURLLogo}LSG.webp` },
+  { id: 25, team_name: 'Gujarat Titans', code: 'GT', logo: `${baseURLLogo}GT.png` },
+  { id: 28, team_name: 'Lucknow Super Giants', code: 'LSG', logo: `${baseURLLogo}LSG.png` },
 ]
 
 export async function createTeams() {
