@@ -22,17 +22,6 @@ class CacheWrapper {
 
 export const Cache = new CacheWrapper()
 
-export function throttle(func) {
-  let throttled = false
-  return async function (...args) {
-    if (throttled) return
-    try {
-      throttled = true
-      await func.apply(this, args)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      throttled = false
-    }
-  }
+export const round = (num) => {
+  return Math.round((num + Number.EPSILON) * 100) / 100
 }

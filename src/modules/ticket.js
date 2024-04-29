@@ -1,4 +1,5 @@
 import { ClientErr } from '../utils/fastify.js'
+import { round } from '../utils/helper.js'
 import { pool } from '../utils/postgres.js'
 
 export async function listUserTicketV1(request, reply) {
@@ -36,13 +37,10 @@ WHERE user_id = $1 AND match_id = $2
     }
   }
 
-  reply.send({ moneyWon, winRate: (winningTicket / allTickets.length) * 100, tickets: allTickets })
+  reply.send({ moneyWon, winRate: round((winningTicket / allTickets.length) * 100), tickets: allTickets })
 }
 
 export async function aggregateUserTicketV1(request, reply) {
-  const userId = request.params.userId
-  if (!userId) throw new ClientErr('userId not passed')
-
   const sqlQuery = `
 SELECT
   t.match_id,
@@ -60,6 +58,6 @@ JOIN team t2 ON m.team2_id = t2.id
 WHERE user_id = $1
 GROUP BY t.match_id, m.id, t1.id, t2.id;
 `
-  const { rows: matchTicket } = await pool.query(sqlQuery, [userId])
+  const { rows: matchTicket } = await pool.query(sqlQuery, [request.userId])
   reply.send(matchTicket)
 }

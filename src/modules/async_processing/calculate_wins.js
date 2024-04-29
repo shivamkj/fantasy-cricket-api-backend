@@ -1,10 +1,10 @@
 import { pool } from '../../utils/postgres.js'
 import { ticketResult } from '../betting/calculate.js'
 
-export const processAllWins = async ({ data }) => {
-  const more = await updateWins(data)
+export const processAllWins = async (task) => {
+  const more = await updateWins(task)
   if (more) {
-    return await processAllWins(data)
+    return await processAllWins(task)
   } else {
     const query = `
 UPDATE ticket_processed
@@ -16,6 +16,7 @@ WHERE
   AND ball_range_id = $2
   AND team_id = $3;
 `
+    const data = task.data
     pool.query(query, [data.matchId, data.ballRangeId, data.teamId])
     return true
   }
@@ -23,7 +24,7 @@ WHERE
 
 const ticketLimit = 1
 
-const updateWins = async (data) => {
+const updateWins = async ({ data }) => {
   const client = await pool.connect()
 
   try {

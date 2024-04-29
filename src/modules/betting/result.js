@@ -1,5 +1,5 @@
 import { ClientErr } from '../../utils/fastify.js'
-import { Cache } from '../../utils/helper.js'
+import { Cache, round } from '../../utils/helper.js'
 import { pool } from '../../utils/postgres.js'
 import { betType, betValToRangeId, getBallRange } from '../constants.js'
 
@@ -50,7 +50,7 @@ WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
     [betType.bowlerRun]: bowlersRun,
     [betType.batterWicket]: batterWicket,
     [betType.runRate]: {
-      value: Math.round((runRate + Number.EPSILON) * 100) / 100,
+      value: round(runRate),
       id: betValToRangeId(betType.runRate, runRate),
     },
     [betType.wicket]: {
@@ -58,7 +58,7 @@ WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
       id: betValToRangeId(betType.wicket, wicket),
     },
     [betType.economy]: {
-      value: Math.round((economy + Number.EPSILON) * 100) / 100,
+      value: round(economy),
       id: betValToRangeId(betType.economy, economy),
     },
     [betType.teamRun]: {

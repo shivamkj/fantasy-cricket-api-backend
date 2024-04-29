@@ -1,3 +1,4 @@
+import { round } from '../../utils/helper.js'
 import { pool } from '../../utils/postgres.js'
 
 export const processAllPayouts = async ({ data }) => {
@@ -33,13 +34,11 @@ WHERE
         rows: [{ total }],
       } = await client.query(totalBetQry, [data.matchId, data.ballRangeId, data.teamId, lobby_id])
 
-      const finalTotal = total - (total / 100) * commission
-
-      console.log(total, commission, finalTotal)
+      const finalTotal = round(total - (total / 100) * commission)
 
       const updatePayQry = `
 UPDATE ticket
-SET payout = bets_won * 50
+SET payout = bets_won * ${finalTotal}
 WHERE
   match_id = $1
   AND ball_range_id = $2

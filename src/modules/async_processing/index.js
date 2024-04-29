@@ -15,7 +15,7 @@ export const pendingTasks = async () => {
   for (const row of allRows) {
     if (row.wins_processed === false) {
       tasks.push({
-        id: `${row.match_id}-${row.ball_range_id}-${row.team_id}-${taskType.wins}`,
+        id: `${row.match_id},${row.ball_range_id},${row.team_id},${taskType.wins}`,
         data: {
           matchId: row.match_id,
           ballRangeId: row.ball_range_id,
@@ -26,7 +26,7 @@ export const pendingTasks = async () => {
 
     if (row.payout_processed === false) {
       tasks.push({
-        id: `${row.match_id}-${row.ball_range_id}-${row.team_id}-${taskType.payout}`,
+        id: `${row.match_id},${row.ball_range_id},${row.team_id},${taskType.payout}`,
         data: {
           matchId: row.match_id,
           ballRangeId: row.ball_range_id,

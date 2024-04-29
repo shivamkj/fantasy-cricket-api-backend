@@ -55,18 +55,29 @@ export async function buyTicketV1(request, reply) {
     if (prices.length == 0) throw new NotFound('match')
     const betPrice = prices[0].price * bets.length
 
-    const { rows: tktPrices } = await client.query('SELECT price FROM lobby WHERE match_id = $1;', [matchId])
-    if (tktPrices.length == 0) throw new NotFound('match')
-    const tktPrice = prices[0].price * bets.length
+    const { rows: lobby } = await client.query('SELECT id, price FROM lobby WHERE match_id = $1;', [matchId])
+    if (lobby.length == 0) throw new NotFound('match')
 
     const insertTktQry = `
 INSERT INTO 
-ticket(id, match_id, team_id, user_id, ticket_type, ball_range_id, ticket_price, total_bet)
-VALUES(gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)
+ticket(id, match_id, team_id, lobby_id, user_id, ticket_type, ball_range_id, ticket_price, bet_price, total_bet)
+VALUES(gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 `
-    const tktValues = [matchId, team1Id, 102275, ticketTypeArr[ticketType], 5, tktPrices[0].price, betPrice]
-    const { rows } = await client.query(insertTktQry, tktValues)
+
+    // TODO: dynamic ball range and dynamic teamId
+
+    const { rows } = await client.query(insertTktQry, [
+      matchId,
+      team1Id,
+      lobby[0].id,
+      request.userId,
+      ticketTypeArr[ticketType],
+      5,
+      lobby[0].price,
+      betPrice,
+      bets.length,
+    ])
     const ticketId = rows[0].id
 
     // insert bets taken for this ticket
@@ -78,7 +89,11 @@ RETURNING id;
       query.push(`($${paramsCount + 1}, $${paramsCount + 2}, $${paramsCount + 3}, $${paramsCount + 4})`)
       paramsCount += 4
     }
-    await client.query(`INSERT INTO bet(ticket_id, range_id, bet_type, player_id) VALUES ${query.join(', ')};`, betValues)
+
+    await client.query(
+      `INSERT INTO bet(ticket_id, range_id, bet_type, player_id) VALUES ${query.join(', ')};`,
+      betValues
+    )
 
     await client.query('COMMIT')
     reply.send({ success: true, ticketId })

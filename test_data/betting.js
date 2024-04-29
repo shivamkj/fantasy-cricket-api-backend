@@ -39,7 +39,7 @@ export async function createTicket() {
     for (const ticket of match.allTickets) {
       const lobby = lobbies[randomInt(0, lobbies.length - 1)]
       const finalTkt = {
-        ticket_id: uuidv4(),
+        id: uuidv4(),
         match_id: match.id,
         lobby_id: lobby.id,
         ticket_price: lobby.price,

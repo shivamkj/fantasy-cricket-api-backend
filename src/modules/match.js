@@ -6,7 +6,7 @@ export async function listMatchesV1(request, reply) {
   const limit = request.query.limit ?? 10
 
   const sqlQuery = `
-  SELECT
+SELECT
   m.id,
   m.team1_id AS t1id,
   t1.team_name AS t1name,
