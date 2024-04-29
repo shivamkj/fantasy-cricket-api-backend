@@ -1,8 +1,9 @@
 import { liveMatches, matchStartId, totalMatches } from './matches.js'
 import { v4 as uuidv4 } from 'uuid'
-import { knex, randomBool } from './utils.js'
-import { ticketTypeArr, currencyTypeArr } from '../src/modules/constants.js'
+import { knex } from './utils.js'
+import { currencyTypeArr } from '../src/modules/constants.js'
 import { randomInt } from './utils.js'
+import { ticketsM1I0, ticketsM1I1 } from './tickets/match1.js'
 
 const lobbies = [
   { title: 'Star 50', price: 50, currency_type: currencyTypeArr[0] },
@@ -24,37 +25,38 @@ export async function createLobby() {
   }
 }
 
-const userId = 102275
-const users = [
-  { id: userId, user_id: uuidv4(), kyc_done: true },
-  { id: userId + 1, user_id: uuidv4(), kyc_done: false },
+const matchTickets = [
+  { id: matchStartId, innings: 0, allTickets: ticketsM1I0 },
+  { id: matchStartId, innings: 1, allTickets: ticketsM1I1 },
+  { id: matchStartId + 1, innings: 0, allTickets: ticketsM1I0 },
+  { id: matchStartId + 1, innings: 1, allTickets: ticketsM1I1 },
 ]
 
-export async function createUsers() {
-  await knex('_user').insert(users)
-}
-
 export async function createTicket() {
-  const tickets = []
-  for (let index = 0; index < liveMatches; index++) {
-    const ticketCount = randomInt(2, 8)
-    const matchId = matchStartId + index
-    const [team] = await knex('match').select('team1_id', 'team2_id').where('match.id', matchId)
-    for (let index = 0; index < ticketCount; index++) {
-      tickets.push({
-        match_id: matchId,
-        user_id: users[randomBool() ? 0 : 1].id,
-        ticket_type: ticketTypeArr[randomInt(0, 2)],
-        team_id: randomBool() ? team.team1_id : team.team2_id,
-        ball_range_id: randomBool() ? 5 : 10,
-        ticket_price: randomInt(200, 999),
-        total_bet: randomInt(200, 999),
-        transaction_id: uuidv4(),
-        pay_confirmed: randomBool(),
-      })
+  for (const match of matchTickets) {
+    const [team] = await knex('match').select('team1_id', 'team2_id').where('match.id', match.id)
+    const lobbies = await knex('lobby').select('*').where('match_id', match.id)
+    for (const ticket of match.allTickets) {
+      const lobby = lobbies[randomInt(0, lobbies.length - 1)]
+      const finalTkt = {
+        ticket_id: uuidv4(),
+        match_id: match.id,
+        lobby_id: lobby.id,
+        ticket_price: lobby.price,
+        team_id: match.innings == 0 ? team.team1_id : team.team2_id,
+        total_bet: ticket.bets.length,
+        ball_range_id: ticket.ball_range_id,
+        user_id: ticket.user_id,
+        ticket_type: ticket.ticket_type,
+        bet_price: ticket.bet_price,
+      }
+      const [{ id }] = await knex('ticket').insert(finalTkt).returning('id')
+      for (const bet of ticket.bets) {
+        bet['ticket_id'] = id
+      }
+      await knex('bet').insert(ticket.bets)
     }
   }
-  await knex('ticket').insert(tickets)
 }
 
 export async function createBetPrice() {

@@ -24,6 +24,5 @@ export async function ticketResultRoute(request, reply) {
   const sqlQuery = `SELECT * FROM ticket WHERE id = $1;`
   const { rows } = await pool.query(sqlQuery, [ticketId])
   if (rows.length == 0) throw new NotFound('ticket')
-  const ticket = rows[0]
-  reply.send(await ticketResult(ticket))
+  reply.send(await ticketResult(rows[0]))
 }

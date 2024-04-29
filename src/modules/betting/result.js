@@ -1,4 +1,5 @@
-import { Cache } from '../../utils/cache.js'
+import { ClientErr } from '../../utils/fastify.js'
+import { Cache } from '../../utils/helper.js'
 import { pool } from '../../utils/postgres.js'
 import { betType, betValToRangeId, getBallRange } from '../constants.js'
 
@@ -12,6 +13,8 @@ SELECT DISTINCT batter FROM ball_by_ball_score
 WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
 `
   const { rows: allBatters } = await pool.query(batterListQuery, [matchId, teamId, ...getBallRange(ballRangeId)])
+  if (allBatters.length == 0) throw new ClientErr('result not available')
+
   const bowlerListQuery = `
 SELECT DISTINCT bowler FROM ball_by_ball_score
 WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
@@ -46,11 +49,26 @@ WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4;
     [betType.batterRun]: battersRun,
     [betType.bowlerRun]: bowlersRun,
     [betType.batterWicket]: batterWicket,
-    [betType.runRate]: { value: runRate, id: betValToRangeId(betType.runRate, runRate) },
-    [betType.wicket]: { value: wicket, id: betValToRangeId(betType.wicket, wicket) },
-    [betType.economy]: { value: economy, id: betValToRangeId(betType.economy, economy) },
-    [betType.teamRun]: { value: teamRun, id: betValToRangeId(betType.teamRun, teamRun) },
-    [betType.boundaries]: { value: boundaries, id: betValToRangeId(betType.boundaries, boundaries) },
+    [betType.runRate]: {
+      value: Math.round((runRate + Number.EPSILON) * 100) / 100,
+      id: betValToRangeId(betType.runRate, runRate),
+    },
+    [betType.wicket]: {
+      value: wicket,
+      id: betValToRangeId(betType.wicket, wicket),
+    },
+    [betType.economy]: {
+      value: Math.round((economy + Number.EPSILON) * 100) / 100,
+      id: betValToRangeId(betType.economy, economy),
+    },
+    [betType.teamRun]: {
+      value: teamRun,
+      id: betValToRangeId(betType.teamRun, teamRun),
+    },
+    [betType.boundaries]: {
+      value: boundaries,
+      id: betValToRangeId(betType.boundaries, boundaries),
+    },
   }
 
   Cache.set(cacheKey, result)

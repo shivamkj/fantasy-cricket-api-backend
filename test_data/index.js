@@ -1,16 +1,15 @@
 import 'dotenv/config'
+import * as misc from './misc.js'
 import * as matches from './matches.js'
 import * as betting from './betting.js'
-import * as ballByBallData from './ball_by_ball_data.js'
 
 await matches.createTeams()
 await matches.createMatches()
+await matches.createPlayers()
 
-await ballByBallData.createPlayers()
-// await ballByBallData.createBallByBallData()
+await misc.createUsers()
 
 await betting.createLobby()
-await betting.createUsers()
 await betting.createBetPrice()
 await betting.createTicket()
 

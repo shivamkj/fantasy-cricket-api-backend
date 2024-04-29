@@ -14,11 +14,11 @@ const betReqBody = {
       items: {
         type: 'object',
         properties: {
-          bet: { type: 'integer' },
+          range_id: { type: 'integer' },
           betType: { type: 'integer' },
           playerId: { type: 'integer' },
         },
-        required: ['bet', 'betType'],
+        required: ['range_id', 'betType'],
         additionalProperties: false,
       },
     },
@@ -28,7 +28,7 @@ const betReqBody = {
 }
 const validateBetReq = ajv.compile(betReqBody)
 
-export async function buyBetV1(request, reply) {
+export async function buyTicketV1(request, reply) {
   const matchId = request.params.matchId
   if (!matchId) throw new ClientErr('matchId not passed')
 
@@ -61,8 +61,8 @@ export async function buyBetV1(request, reply) {
 
     const insertTktQry = `
 INSERT INTO 
-ticket(match_id, team_id, user_id, ticket_type, ball_range_id, ticket_price, total_bet)
-VALUES($1, $2, $3, $4, $5, $6, $7)
+ticket(id, match_id, team_id, user_id, ticket_type, ball_range_id, ticket_price, total_bet)
+VALUES(gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)
 RETURNING id;
 `
     const tktValues = [matchId, team1Id, 102275, ticketTypeArr[ticketType], 5, tktPrices[0].price, betPrice]
@@ -74,17 +74,17 @@ RETURNING id;
     const query = []
     let paramsCount = 0
     for (const bet of bets) {
-      betValues.push(ticketId, bet.bet, betTypeArr[bet.betType], bet.playerId)
+      betValues.push(ticketId, bet.range_id, betTypeArr[bet.betType], bet.playerId)
       query.push(`($${paramsCount + 1}, $${paramsCount + 2}, $${paramsCount + 3}, $${paramsCount + 4})`)
       paramsCount += 4
     }
-    await client.query(`INSERT INTO bet(ticket_id, bet, bet_type, player_id) VALUES ${query.join(', ')};`, betValues)
+    await client.query(`INSERT INTO bet(ticket_id, range_id, bet_type, player_id) VALUES ${query.join(', ')};`, betValues)
 
     await client.query('COMMIT')
     reply.send({ success: true, ticketId })
-  } catch (e) {
+  } catch (err) {
     await client.query('ROLLBACK')
-    throw e
+    throw err
   } finally {
     client.release()
   }

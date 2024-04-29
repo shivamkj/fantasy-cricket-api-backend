@@ -1,5 +1,6 @@
 import { knex } from './utils.js'
 import { randomDate, randomInt } from './utils.js'
+import { players } from './ball_by_ball_data/players.js'
 
 const baseURLLogo = 'https://yfiotzbqlesommmuhbwv.supabase.co/storage/v1/object/public/test.internal.public/'
 export const allTeams = [
@@ -14,6 +15,10 @@ export const allTeams = [
   { id: 25, team_name: 'Gujarat Titans', code: 'GT', logo: `${baseURLLogo}GT.png` },
   { id: 28, team_name: 'Lucknow Super Giants', code: 'LSG', logo: `${baseURLLogo}LSG.png` },
 ]
+
+export async function createPlayers() {
+  await knex('player').insert(players)
+}
 
 export async function createTeams() {
   await knex('team').insert(allTeams)

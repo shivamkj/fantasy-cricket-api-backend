@@ -1,6 +1,7 @@
 import fastifyPackage from 'fastify'
-
-export const PROD = process.env.NODE_ENV == 'production'
+import { PROD } from './helper.js'
+import jwt from 'jsonwebtoken'
+import { validate as validUuid } from 'uuid'
 
 export const fastify = fastifyPackage({
   logger: !PROD,
@@ -12,16 +13,15 @@ fastify.get('/', (request, reply) => {
 })
 
 fastify.setErrorHandler((err, _, reply) => {
-  if (err.name == customError) {
-    reply.status(err.httpCode).send({ error: err.message })
+  if (PROD) {
+    return reply.status(500).send({ error: 'Internal Server Error' })
   }
 
-  if (PROD) {
-    reply.status(500).send({ error: 'Internal Server Error' })
-  } else {
-    console.log(err)
-    reply.status(500).send({ error: err.message })
+  if (err.name == customError) {
+    return reply.status(err.httpCode).send({ error: err.message })
   }
+  console.log(err)
+  reply.status(500).send({ error: err.message })
 })
 
 const customError = 'customError'
@@ -40,4 +40,29 @@ export class ClientErr extends Error {
     this.httpCode = 400
     this.name = customError
   }
+}
+
+const jwtSecret = process.env.JWT_SECRET
+
+// Auth Handler
+export const authHandler = (request, reply, done) => {
+  const authHeader = request.headers.authorization?.replace('Bearer ', '')
+
+  if (!PROD) {
+    if (!authHeader || !validUuid(authHeader)) {
+      return reply.status(401).send({ error: 'Unauthorized (Invalid Token)' })
+    } else {
+      request.userId = authHeader
+      return done()
+    }
+  }
+
+  jwt.verify(authHeader, jwtSecret, function (err, decoded) {
+    if (err == null) {
+      request.userId = decoded.sub
+      done()
+    } else {
+      reply.status(401).send({ error: 'Unauthorized (Invalid Token)' })
+    }
+  })
 }

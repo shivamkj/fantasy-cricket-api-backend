@@ -9,15 +9,6 @@ import { pool } from '../../utils/postgres.js'
 import { getBallRange } from '../constants.js'
 import { getTeamsId } from '../score_card.js'
 
-export async function startMatch(request, reply) {
-  const matchId = request.params.matchId
-  if (!matchId) throw new ClientErr('matchId not passed')
-
-  const query = 'UPDATE match SET live = TRUE WHERE id = $1;'
-  const res = await pool.query(query, [matchId])
-  reply.send({ success: true, rowsAffected: res.rowCount })
-}
-
 export async function insertTestBalldata(request, reply) {
   const { innings, rangeId, matchId } = request.params
   if (!matchId) throw new ClientErr('matchId not passed')
@@ -28,9 +19,18 @@ export async function insertTestBalldata(request, reply) {
 
   const client = await pool.connect()
   try {
+    await client.query('BEGIN')
     const { team1Id, team2Id } = await getTeamsId(matchId, client)
     const teamId = innings == 0 ? team1Id : team2Id
     const [overStart, overEnd] = getBallRange(rangeId)
+
+    if (rangeId == 5 && innings == 0) {
+      const query = 'UPDATE match SET live = TRUE WHERE id = $1;'
+      await client.query(query, [matchId])
+    }
+
+    const ticketProcessQry = 'INSERT INTO ticket_processed(match_id, ball_range_id, team_id) VALUES ($1, $2, $3)'
+    await client.query(ticketProcessQry, [matchId, rangeId, teamId])
 
     const ballsValues = []
     const query = []
@@ -73,17 +73,13 @@ INSERT INTO ball_by_ball_score (
 )
 VALUES ${query.join(', ')};
 `
-    console.log(finalQuery)
-    const res = await client.query(finalQuery, ballsValues)
-    console.log(res)
-    reply.send({
-      team1Id,
-      team2Id,
-      overStart,
-      overEnd,
-    })
-  } catch (e) {
-    throw e
+    await client.query(finalQuery, ballsValues)
+    await client.query('COMMIT')
+
+    reply.send({ matchId, overStart, overEnd })
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
   } finally {
     client.release()
   }

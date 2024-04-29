@@ -7,38 +7,37 @@ export const ticketResult = async (ticket) => {
   const result = await allResults(ticket.match_id, ticket.ball_range_id, ticket.team_id)
   let wins = 0
   for (const bet of allBets) {
-    const won = betResult(bet, result)
+    const won = checkBetResult(bet, result)
     if (won) wins++
-    console.log(won, bet)
   }
-  return { winPercent: wins / allBets.length, result }
+  return wins
 }
 
-const betResult = (betData, result) => {
-  switch (betData.bet_type) {
+const checkBetResult = (bet, result) => {
+  switch (bet.bet_type) {
     case betType.batterRun:
-      if (betData.bet == result[betType.batterRun][betData.player_id]?.id) return true
+      if (bet.range_id == result[betType.batterRun][bet.player_id]?.id) return true
       break
     case betType.bowlerRun:
-      if (betData.bet == result[betType.bowlerRun][betData.player_id]?.id) return true
+      if (bet.range_id == result[betType.bowlerRun][bet.player_id]?.id) return true
       break
     case betType.batterWicket:
       return false
       break
     case betType.wicket:
-      if (betData.bet == result[betType.wicket].id) return true
+      if (bet.range_id == result[betType.wicket].id) return true
       break
     case betType.teamRun:
-      if (betData.bet == result[betType.teamRun].id) return true
+      if (bet.range_id == result[betType.teamRun].id) return true
       break
     case betType.economy:
-      if (betData.bet == result[betType.economy].id) return true
+      if (bet.range_id == result[betType.economy].id) return true
       break
     case betType.runRate:
-      if (betData.bet == result[betType.runRate].id) return true
+      if (bet.range_id == result[betType.runRate].id) return true
       break
     case betType.boundaries:
-      if (betData.bet == result[betType.boundaries].id) return true
+      if (bet.range_id == result[betType.boundaries].id) return true
       break
     default:
       return false
