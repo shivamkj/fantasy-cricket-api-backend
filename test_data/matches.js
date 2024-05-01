@@ -39,6 +39,7 @@ export async function createMatches() {
     const { team1, team2 } = randomTeams()
     matches.push({
       id: matchStartId + index,
+      key: `${matchStartId + index}`,
       team1_id: team1.id,
       team2_id: team2.id,
       start_time: randomDate(start, end),

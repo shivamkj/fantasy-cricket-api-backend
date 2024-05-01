@@ -2,3 +2,4 @@ node_modules/
 query.sql
 _test.js
 .env
+test/

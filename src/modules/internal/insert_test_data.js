@@ -32,48 +32,30 @@ export async function insertTestBalldata(request, reply) {
     const ticketProcessQry = 'INSERT INTO ticket_processed(match_id, ball_range_id, team_id) VALUES ($1, $2, $3)'
     await client.query(ticketProcessQry, [matchId, rangeId, teamId])
 
-    const ballsValues = []
-    const query = []
-    let paramsCount = 0
+    const balls = []
     for (const { ball: ballNum, ...ball } of inningsData) {
       if (!(ballNum >= overStart && ballNum <= overEnd)) continue
-      ballsValues.push(
-        matchId,
-        ball.batter,
-        ball.bowler,
-        ballNum,
-        teamId,
-        ball.runs_off_bat,
-        ball.extras,
-        ball.wides,
-        ball.noballs,
-        ball.byes,
-        ball.legbyes,
-        null,
-        Boolean(ball.wicket_type) ? true : null,
-        ball.runs_off_bat == 6 ? true : null,
-        ball.runs_off_bat == 4 ? true : null,
-        ball.wicket_type
-      )
-      query.push(
-        `($${paramsCount + 1}, $${paramsCount + 2}, $${paramsCount + 3}, $${paramsCount + 4},  $${paramsCount + 5},  $${
-          paramsCount + 6
-        },  $${paramsCount + 7},  $${paramsCount + 8},  $${paramsCount + 9},  $${paramsCount + 10}, $${
-          paramsCount + 11
-        },  $${paramsCount + 12},  $${paramsCount + 13},  $${paramsCount + 14},  $${paramsCount + 15}, $${
-          paramsCount + 16
-        })`
-      )
-      paramsCount += 16
+      balls.push({
+        match_id: matchId,
+        batter: ball.batter,
+        bowler: ball.bowler,
+        ball: ballNum,
+        team_id: teamId,
+        runs_off_bat: ball.runs_off_bat,
+        extra: ball.extras,
+        wide: ball.wides,
+        noball: ball.noballs,
+        bye: ball.byes,
+        legbye: ball.legbyes,
+        penalty: null,
+        wicket: Boolean(ball.wicket_type) ? true : null,
+        six: ball.runs_off_bat == 6 ? true : null,
+        four: ball.runs_off_bat == 4 ? true : null,
+        commentary: ball.wicket_type,
+      })
     }
-    const finalQuery = `
-INSERT INTO ball_by_ball_score (
-  match_id, batter, bowler, ball, team_id, runs_off_bat, extra,
-  wide, noball, bye, legbye, penalty, wicket, six, four, commentary
-)
-VALUES ${query.join(', ')};
-`
-    await client.query(finalQuery, ballsValues)
+
+    await client.insertMany(balls, 'ball_by_ball_score')
     await client.query('COMMIT')
 
     reply.send({ matchId, overStart, overEnd })

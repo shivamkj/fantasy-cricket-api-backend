@@ -64,7 +64,6 @@ ticket(id, match_id, team_id, lobby_id, user_id, ticket_type, ball_range_id, tic
 VALUES(gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 `
-
     // TODO: dynamic ball range and dynamic teamId
 
     const { rows } = await client.query(insertTktQry, [

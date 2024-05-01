@@ -5,8 +5,8 @@ export const PROD = process.env.NODE_ENV == 'production'
 class CacheWrapper {
   constructor() {
     this.cache = new NodeCache({
-      stdTTL: 60 * 60 * 3, // 3 minute
-      checkperiod: 60 * 60, // 1 minute
+      stdTTL: 60 * 60 * 1, // 1 hour
+      checkperiod: 60 * 3, // 3 minutes
     })
   }
   get(key) {

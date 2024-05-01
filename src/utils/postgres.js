@@ -6,6 +6,34 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000,
 })
 
+async function queryOne(query, values) {
+  const {
+    rows: [firstRow],
+  } = await this.query(query, values)
+  return firstRow
+}
+pg.Pool.prototype.queryOne = queryOne
+pg.Client.prototype.queryOne = queryOne
+
+function insertMany(values, tableName, appendQuery = '') {
+  const allKeys = Object.keys(values[0])
+
+  const valArr = []
+  const queryValues = []
+  let paramsCount = 1
+  for (const obj of values) {
+    for (const key of allKeys) {
+      valArr.push(obj[key])
+    }
+    queryValues.push(`(${allKeys.map(() => `$${paramsCount++}`).join(', ')})`)
+  }
+
+  const query = `INSERT INTO ${tableName} (${allKeys.join(', ')}) VALUES ${queryValues.join(', ')} ${appendQuery};`
+  return this.query(query, valArr)
+}
+pg.Pool.prototype.insertMany = insertMany
+pg.Client.prototype.insertMany = insertMany
+
 pg.types.setTypeParser(pg.types.builtins.INT8, (value) => parseInt(value))
 
 pg.types.setTypeParser(pg.types.builtins.FLOAT8, (value) => parseFloat(value))
