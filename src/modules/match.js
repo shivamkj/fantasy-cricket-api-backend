@@ -73,7 +73,7 @@ SELECT
   l.currency_type AS type,
   COUNT(t.*) AS playing_count
 FROM lobby l
-JOIN ticket t ON t.lobby_id = l.id
+LEFT JOIN ticket t ON t.lobby_id = l.id
 WHERE l.match_id = $1
 GROUP BY l.id
 ORDER BY entry_price;
