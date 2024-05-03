@@ -22,13 +22,30 @@ const defaultLobbies = [
 ]
 
 export async function setupLiveMatch(matchId) {
-  await addPlayers(matchId)
+  const { setup_done } = await pool.queryOne('SELECT setup_done FROM match WHERE id = $1', [matchId])
+  if (setup_done) return
 
-  const lobbies = Object.assign([], defaultLobbies)
-  for (const lobby of lobbies) {
-    lobby['match_id'] = matchId
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    await addPlayers(matchId, client)
+
+    const lobbies = Object.assign([], defaultLobbies)
+    for (const lobby of lobbies) {
+      lobby['match_id'] = matchId
+    }
+    await client.insertMany(lobbies, 'lobby')
+
+    await client.query('UPDATE match SET setup_done = TRUE WHERE id = $1', [matchId])
+
+    await client.query('COMMIT')
+  } catch (e) {
+    await client.query('ROLLBACK')
+    throw e
+  } finally {
+    client.release()
   }
-  await pool.insertMany(lobbies, 'lobby')
 }
 
 export async function processBallUpdate(matchId) {

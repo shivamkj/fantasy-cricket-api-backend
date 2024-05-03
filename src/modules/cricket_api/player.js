@@ -1,9 +1,7 @@
-import 'dotenv/config'
-import { pool } from '../../utils/postgres.js'
 import { authHeader, baseUrl, getAuthToken, matchIdToKey, projectKey } from './utils.js'
 import { getTeamsId } from '../score_card.js'
 
-export const addPlayers = async (matchId) => {
+export const addPlayers = async (matchId, client) => {
   if (!matchId) return null
   const matchKey = await matchIdToKey(matchId)
 
@@ -25,11 +23,11 @@ export const addPlayers = async (matchId) => {
       jersey_name: player.jersey_name,
     })
   }
-  await pool.insertMany(allPlayers, 'player', 'ON CONFLICT (key) DO NOTHING')
+  await client.insertMany(allPlayers, 'player', 'ON CONFLICT (key) DO NOTHING')
 
-  const { team1Id, team2Id } = await getTeamsId(matchId)
+  const { team1Id, team2Id } = await getTeamsId(matchId, client)
 
-  const playerIdKeyMap = await playersKeyToId(allPlayerKeys)
+  const playerIdKeyMap = await playersKeyToId(allPlayerKeys, client)
   const playerSquad = []
 
   const team1Players = body.data.squad.a.player_keys
@@ -50,10 +48,10 @@ export const addPlayers = async (matchId) => {
     })
   }
 
-  await pool.insertMany(playerSquad, 'squad')
+  await client.insertMany(playerSquad, 'squad')
 }
 
-export const playersKeyToId = async (allPlayerKeys) => {
+export const playersKeyToId = async (allPlayerKeys, client) => {
   // get playerId from player key for all the players
   const playerIdQry = `
 WITH temp (k) AS (
@@ -63,7 +61,7 @@ SELECT p.id, p.key
 FROM player p
 JOIN temp ON p.key = temp.k;  
 `
-  const { rows: playerIds } = await pool.query(playerIdQry)
+  const { rows: playerIds } = await client.query(playerIdQry)
   const playerIdKeyMap = {}
   for (const player of playerIds) {
     playerIdKeyMap[player.key] = player.id
