@@ -3,9 +3,7 @@ import { PROD } from './helper.js'
 import jwt from 'jsonwebtoken'
 import { validate as validUuid } from 'uuid'
 
-export const fastify = fastifyPackage({
-  logger: !PROD,
-})
+export const fastify = fastifyPackage({})
 
 // Route for Health Check
 fastify.get('/', (request, reply) => {
@@ -20,7 +18,7 @@ fastify.setErrorHandler((err, _, reply) => {
   if (err.name == customError) {
     return reply.status(err.httpCode).send({ error: err.message })
   }
-  console.log(err)
+  console.error(err)
   reply.status(500).send({ error: err.message })
 })
 

@@ -51,12 +51,9 @@ export async function buyTicketV1(request, reply) {
     await client.query('BEGIN')
     const { team1Id } = await getTeamsId(matchId, client)
 
-    const { rows: prices } = await client.query('SELECT price FROM bet_price WHERE match_id = $1;', [matchId])
-    if (prices.length == 0) throw new NotFound('match')
-    const betPrice = prices[0].price * bets.length
-
-    const { rows: lobby } = await client.query('SELECT id, price FROM lobby WHERE match_id = $1;', [matchId])
-    if (lobby.length == 0) throw new NotFound('match')
+    const lobbyDetailsQry = 'SELECT id, entry_price, bet_price FROM lobby WHERE id = $1;'
+    const lobby = await client.queryOne(lobbyDetailsQry, [request.body.lobbyId])
+    if (!lobby) throw new NotFound('match')
 
     const insertTktQry = `
 INSERT INTO 
@@ -69,12 +66,12 @@ RETURNING id;
     const { rows } = await client.query(insertTktQry, [
       matchId,
       team1Id,
-      lobby[0].id,
+      lobby.id,
       request.userId,
       ticketTypeArr[ticketType],
       5,
-      lobby[0].price,
-      betPrice,
+      lobby.entry_price,
+      lobby.bet_price * bets.length,
       bets.length,
     ])
     const ticketId = rows[0].id

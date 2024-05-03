@@ -46,9 +46,9 @@ LIMIT ${ticketLimit};
 
     await client.query('COMMIT')
     return allRows.length > 0
-  } catch (e) {
+  } catch (err) {
     await client.query('ROLLBACK')
-    throw e
+    throw err
   } finally {
     client.release()
   }

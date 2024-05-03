@@ -48,7 +48,7 @@ LIMIT $2;
   }
 }
 
-async function getMatchScore(matchId, teamId, client) {
+export async function getMatchScore(matchId, teamId, client) {
   const scoreQuery = `
 SELECT
   COALESCE(SUM(runs_off_bat), 0) AS run,
@@ -62,15 +62,21 @@ WHERE match_id = $1 AND team_id = $2;
 }
 
 export async function getLobbyV1(request, reply) {
-  const matchId = request.params.matchId
+  const matchId = parseInt(request.params.matchId)
   if (!matchId) throw new ClientErr('matchId not passed')
 
   const sqlQuery = `
 SELECT
-  id, title, price, playing_count, currency_type as type
-FROM lobby
-WHERE match_id = $1
-ORDER BY price;
+  l.id,
+  l.title,
+  l.entry_price AS price,
+  l.currency_type AS type,
+  COUNT(t.*) AS playing_count
+FROM lobby l
+JOIN ticket t ON t.lobby_id = l.id
+WHERE l.match_id = $1
+GROUP BY l.id
+ORDER BY entry_price;
 `
   const { rows: lobbies } = await pool.query(sqlQuery, [matchId])
   reply.send(lobbies)

@@ -1,4 +1,5 @@
 import NodeCache from 'node-cache'
+import { createClient } from '@supabase/supabase-js'
 
 export const PROD = process.env.NODE_ENV == 'production'
 
@@ -21,6 +22,13 @@ class CacheWrapper {
 }
 
 export const Cache = new CacheWrapper()
+
+export const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+})
 
 export const round = (num) => {
   return Math.round((num + Number.EPSILON) * 100) / 100

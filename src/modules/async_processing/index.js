@@ -1,58 +1,68 @@
 import { ClientErr } from '../../utils/fastify.js'
 import { PROD } from '../../utils/helper.js'
-import { pool } from '../../utils/postgres.js'
 import { fetchMatches } from '../cricket_api/fetch_matches.js'
-import { matchSocket } from '../cricket_api/realtime.js'
-import { processAllPayouts } from './calculate_payouts.js'
-import { processAllWins } from './calculate_wins.js'
+import { Queue, Worker } from 'bullmq'
+import { listenMatchUpdate, processBallUpdate, setupLiveMatch } from './tasks.js'
 
-const taskType = {
-  payout: 'payout',
-  wins: 'wins',
+export const tasks = {
+  calculatePayout: 'calculatePayout',
+  calculateWins: 'calculateWins',
+  processTicket: 'processTicket',
+  fetchMatches: 'fetchMatches', // ✅ Working
+  listenBallUpdate: 'listenBallUpdate',
+  processBallUpdate: 'processBallUpdate',
+  setupLiveMatch: 'setupLiveMatch',
 }
 
-export const pendingTasks = async () => {
-  const { rows: allRows } = await pool.query('SELECT * FROM ticket_processed;')
-
-  const tasks = []
-  for (const row of allRows) {
-    if (row.wins_processed === false) {
-      tasks.push({
-        id: `${row.match_id},${row.ball_range_id},${row.team_id},${taskType.wins}`,
-        data: {
-          matchId: row.match_id,
-          ballRangeId: row.ball_range_id,
-          teamId: row.team_id,
-        },
-      })
-    }
-
-    if (row.payout_processed === false) {
-      tasks.push({
-        id: `${row.match_id},${row.ball_range_id},${row.team_id},${taskType.payout}`,
-        data: {
-          matchId: row.match_id,
-          ballRangeId: row.ball_range_id,
-          teamId: row.team_id,
-        },
-      })
-    }
-  }
-
-  return tasks
+const connection = {
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
 }
 
-export const processTickets = async () => {
-  const allTasks = await pendingTasks()
-  if (!PROD) console.log('pending tasks', allTasks)
+const queueName = 'asyncQueue'
 
-  for (const task of allTasks) {
-    if (task.id.endsWith(taskType.wins)) {
-      await processAllWins(task)
-    } else if (task.id.endsWith(taskType.payout)) {
-      await processAllPayouts(task)
+export const asyncQueue = new Queue(queueName, { connection })
+
+const worker = new Worker(
+  queueName,
+  async ({ name, data }) => {
+    if (!PROD) console.log('processing', name, data)
+
+    switch (name) {
+      case tasks.fetchMatches:
+        await fetchMatches()
+        break
+
+      case tasks.processBallUpdate:
+        await processBallUpdate(data.matchId)
+        break
+
+      case tasks.listenBallUpdate:
+        await listenMatchUpdate(data.matchId)
+        break
+
+      case tasks.setupLiveMatch:
+        await setupLiveMatch(data.matchId)
+        break
+
+      default:
+        throw new Error('job has not been handeled to process')
     }
+  },
+  {
+    connection,
   }
+)
+
+worker.on('failed', (job, err) => {
+  console.error(`Job with Name:${job.name}, Id:${job.id} has failed with err`)
+  console.error(err)
+})
+
+if (!PROD) {
+  worker.on('completed', (job) => {
+    console.log(`Job with Name:${job.name}, Id:${job.id} has completed!`)
+  })
 }
 
 export async function processAsyncTasks(request, reply) {
@@ -60,20 +70,15 @@ export async function processAsyncTasks(request, reply) {
   if (!taskName) throw new ClientErr('task name missing')
 
   switch (taskName) {
-    case 'processTicket':
-      await processTickets()
+    case tasks.processTicket:
+    case tasks.fetchMatches:
+      await asyncQueue.add(taskName)
       break
 
-    case 'fetchMatch':
-      await fetchMatches()
-      break
-
-    case 'listenMatch':
-      await matchSocket.listen(request.query.matchKey)
-      break
-
-    case 'listenMatchTest':
-      console.log(matchSocket._socket.connected)
+    case tasks.processBallUpdate:
+    case tasks.listenBallUpdate:
+    case tasks.setupLiveMatch:
+      await asyncQueue.add(taskName, request.body)
       break
 
     default:

@@ -1,4 +1,5 @@
 import { Cache } from '../../utils/helper.js'
+import { pool } from '../../utils/postgres.js'
 
 export const baseUrl = 'https://api.sports.roanuz.com'
 export const projectKey = process.env.CRICKET_PROJECT_KEY
@@ -25,4 +26,7 @@ export const getAuthToken = async () => {
   return token
 }
 
-export const matchKeyToId = () => {}
+export async function matchIdToKey(matchId, client) {
+  const { key } = await (client ?? pool).queryOne('SELECT key FROM match WHERE id = $1;', [matchId])
+  return key
+}

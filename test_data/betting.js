@@ -6,12 +6,12 @@ import { randomInt } from './utils.js'
 import { ticketsM1I0, ticketsM1I1 } from './tickets/match1.js'
 
 const lobbies = [
-  { title: 'Star 50', price: 50, currency_type: currencyTypeArr[0] },
-  { title: 'Legend 100', price: 100, currency_type: currencyTypeArr[1] },
-  { title: 'High Stakes', price: 200, currency_type: currencyTypeArr[0] },
-  { title: 'Social Lobby', price: 150, currency_type: currencyTypeArr[2] },
-  { title: 'Social Lobby', price: 250, currency_type: currencyTypeArr[2] },
-  { title: 'Private Lobby', price: 50, currency_type: currencyTypeArr[2] },
+  { title: 'Star 50', entry_price: 50, currency_type: currencyTypeArr[0], bet_price: 20, commission: 5 },
+  { title: 'Legend 100', entry_price: 100, currency_type: currencyTypeArr[1], bet_price: 30, commission: 5 },
+  { title: 'High Stakes', entry_price: 200, currency_type: currencyTypeArr[0], bet_price: 40, commission: 0 },
+  { title: 'Social Lobby', entry_price: 150, currency_type: currencyTypeArr[2], bet_price: 30, commission: 5 },
+  { title: 'Social Lobby', entry_price: 250, currency_type: currencyTypeArr[2], bet_price: 50, commission: 0 },
+  { title: 'Private Lobby', entry_price: 50, currency_type: currencyTypeArr[2], bet_price: 20, commission: 5 },
 ]
 
 export async function createLobby() {
@@ -42,7 +42,7 @@ export async function createTicket() {
         id: uuidv4(),
         match_id: match.id,
         lobby_id: lobby.id,
-        ticket_price: lobby.price,
+        ticket_price: lobby.entry_price,
         team_id: match.innings == 0 ? team.team1_id : team.team2_id,
         total_bet: ticket.bets.length,
         ball_range_id: ticket.ball_range_id,
@@ -57,19 +57,4 @@ export async function createTicket() {
       await knex('bet').insert(ticket.bets)
     }
   }
-}
-
-export async function createBetPrice() {
-  const betPrices = []
-  const prices = [50, 80, 100, 150]
-  const commissions = [0, 10, 20]
-  for (let index = 0; index < liveMatches; index++) {
-    const ticketCount = randomInt(2, 8)
-    const matchId = betPrices.push({
-      match_id: matchStartId + index,
-      price: prices[randomInt(0, 3)],
-      commission: commissions[randomInt(0, 2)],
-    })
-  }
-  await knex('bet_price').insert(betPrices)
 }

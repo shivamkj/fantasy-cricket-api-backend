@@ -1,6 +1,6 @@
 import { fastify, authHandler } from './utils/fastify.js'
 import { getLobbyV1 as getLobbiesV1, listMatchesV1 } from './modules/match.js'
-import { getCurrentOverBallsV1, getScoreCardV1 } from './modules/score_card.js'
+import { getLiveMatchScoreV1, getScoreCardV1 } from './modules/score_card.js'
 import { listUserTicketV1, aggregateUserTicketV1 } from './modules/ticket.js'
 import { buyTicketV1, getBetPriceV1 } from './modules/betting/buy_ticket.js'
 import { insertTestBalldata } from './modules/internal/insert_test_data.js'
@@ -11,7 +11,7 @@ import { processAsyncTasks } from './modules/async_processing/index.js'
 
 fastify.get('/v1/matches', listMatchesV1)
 fastify.get('/v1/matches/:matchId/lobby', getLobbiesV1)
-fastify.get('/v1/matches/:matchId/over-balls', getCurrentOverBallsV1)
+fastify.get('/v1/matches/:matchId/live', getLiveMatchScoreV1)
 fastify.get('/v1/matches/:matchId/scorecard', getScoreCardV1)
 fastify.get('/v1/matches/:matchId/bet', getBetPriceV1)
 

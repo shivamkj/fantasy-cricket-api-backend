@@ -1,10 +1,12 @@
 import 'dotenv/config'
 import { pool } from '../../utils/postgres.js'
-import { authHeader, baseUrl, getAuthToken, projectKey } from './utils.js'
+import { authHeader, baseUrl, getAuthToken, matchIdToKey, projectKey } from './utils.js'
 import { getTeamsId } from '../score_card.js'
 
-export const fetchPlayers = async (matchKey) => {
-  if (!matchKey) return null
+export const addPlayers = async (matchId) => {
+  if (!matchId) return null
+  const matchKey = await matchIdToKey(matchId)
+
   const response = await fetch(baseUrl + `/v5/cricket/${projectKey}/match/${matchKey}/`, {
     headers: { [authHeader]: await getAuthToken() },
   })
@@ -25,8 +27,6 @@ export const fetchPlayers = async (matchKey) => {
   }
   await pool.insertMany(allPlayers, 'player', 'ON CONFLICT (key) DO NOTHING')
 
-  // get matchId and teamId
-  const { id: matchId } = await pool.queryOne('SELECT id FROM match WHERE key = $1', [matchKey])
   const { team1Id, team2Id } = await getTeamsId(matchId)
 
   const playerIdKeyMap = await playersKeyToId(allPlayerKeys)
@@ -70,5 +70,3 @@ JOIN temp ON p.key = temp.k;
   }
   return playerIdKeyMap
 }
-
-// await fetchPlayers('a-rz--cricket--4I1772569443466117161')
