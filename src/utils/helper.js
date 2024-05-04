@@ -3,11 +3,17 @@ import { createClient } from '@supabase/supabase-js'
 
 export const PROD = process.env.NODE_ENV == 'production'
 
+export const tll = {
+  '2min': 60 * 2,
+  '30min': 60 * 30,
+  '1hr': 60 * 60 * 1,
+}
+
 class CacheWrapper {
   constructor() {
     this.cache = new NodeCache({
-      stdTTL: 60 * 60 * 1, // 1 hour
-      checkperiod: 60 * 3, // 3 minutes
+      stdTTL: tll['1hr'],
+      checkperiod: tll['2min'],
     })
   }
   get(key) {

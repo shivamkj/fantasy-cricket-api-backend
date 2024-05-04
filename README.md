@@ -9,3 +9,4 @@ Teachstack:
 ### Commands
 
 - Format schema SQL files: `sqlfluff format schema.sql --dialect postgres`
+- Start Redis (without disk save): `redis-server --save "" --appendonly no`

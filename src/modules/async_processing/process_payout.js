@@ -1,16 +1,13 @@
 import { pool } from '../../utils/postgres.js'
-import { ticketResult } from '../betting/calculate.js'
 
-export const calculateAllWins = async (data) => {
-  const more = await calculateWins(data)
+export const processAllPayout = async (data) => {
+  const more = await processPayout(data)
   if (more) {
-    return await calculateAllWins(data)
+    return await processAllPayout(data)
   } else {
     const query = `
 UPDATE ticket_processed
-SET
-  wins_calculated = TRUE,
-  payout_calculated = FALSE
+SET payout_processed = TRUE
 WHERE
   match_id = $1
   AND ball_range_id = $2
@@ -23,7 +20,7 @@ WHERE
 
 const ticketLimit = 6
 
-const calculateWins = async (data) => {
+const processPayout = async (data) => {
   const client = await pool.connect()
 
   try {
@@ -34,17 +31,19 @@ WHERE
   match_id = $1
   AND ball_range_id = $2
   AND team_id = $3
-  AND bets_won IS NULL
+  AND transaction_id IS NULL
 LIMIT ${ticketLimit};
 `
-    const { rows: allRows } = await client.query(selectQuery, [data.matchId, data.ballRangeId, data.teamId])
-    for (const ticket of allRows) {
-      const wins = await ticketResult(ticket)
-      await client.query('UPDATE ticket SET bets_won = $1 WHERE id = $2;', [wins, ticket.id])
+    const { rows: allTickets } = await client.query(selectQuery, [data.matchId, data.ballRangeId, data.teamId])
+    for (const ticket of allTickets) {
+      // TODO: send money to wallet
+      // TODO: send winning notification
+      // TODO: send update to feed
+      await client.query('UPDATE ticket SET transaction_id = $1 WHERE id = $2;', ['TR1948498496211', ticket.id])
     }
 
     await client.query('COMMIT')
-    return allRows.length > 0
+    return allTickets.length > 0
   } catch (err) {
     await client.query('ROLLBACK')
     throw err

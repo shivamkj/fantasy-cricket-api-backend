@@ -3,3 +3,4 @@ query.sql
 _test.js
 .env
 test/
+.vscode/

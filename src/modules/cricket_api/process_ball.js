@@ -2,7 +2,7 @@ import { pool } from '../../utils/postgres.js'
 import { asyncQueue, tasks } from '../async_processing/index.js'
 import { playersKeyToId } from './player.js'
 
-const ballToProcess = 6
+const ballToProcess = 8
 
 const upsertStatement = `
 ON CONFLICT (id)
@@ -22,6 +22,17 @@ DO UPDATE SET
 
 export const processMatchUpdate = async (res) => {
   try {
+    const status = res.data.status
+    if (status === 'not_started') {
+      console.log('not_started status')
+      console.log(JSON.stringify(res))
+      return
+    } else if (status == 'completed') {
+      console.log('completed status')
+      console.log(JSON.stringify(res))
+      return
+    }
+
     const recentOvers = res.data.play?.live?.recent_overs
     if (!recentOvers || recentOvers?.length === 0) return
 
@@ -78,13 +89,19 @@ export const processMatchUpdate = async (res) => {
 
     await pool.insertMany(ballsToProcess, 'ball_by_ball_score', upsertStatement)
 
-    const lastBall = ballData[recentBalls[0]]
+    const lastBall = ballsToProcess[0]
     await asyncQueue.add(tasks.processBallUpdate, {
       matchId,
-      ball: parseFloat(`${lastBall.overs[0]}.${lastBall.overs[1]}`),
+      teamId: lastBall.team_id,
+      ballNum: lastBall.ball,
+      rangeId: ballToOverRange(lastBall.ball),
     })
   } catch (err) {
     console.error(err)
     console.error(JSON.stringify(res))
   }
 }
+
+export const overSlot = 5
+
+export const ballToOverRange = (num) => Math.ceil(num / overSlot) * overSlot
