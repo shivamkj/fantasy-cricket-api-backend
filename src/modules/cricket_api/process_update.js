@@ -21,15 +21,20 @@ DO UPDATE SET
 `
 
 export const processMatchUpdate = async (res) => {
+  const client = await pool.connect()
+
   try {
+    const { id: matchId } = await client.queryOne('SELECT id FROM match WHERE key = $1', [res.data.key])
+
     const status = res.data.status
     if (status === 'not_started') {
-      console.log('not_started status')
-      console.log(JSON.stringify(res))
+      const toss = res.data.toss
+      if (toss) asyncQueue.add(tasks.startMatch, { matchId, toss })
       return
     } else if (status == 'completed') {
       console.log('completed status')
       console.log(JSON.stringify(res))
+      asyncQueue.add(tasks.endMatch, { matchId })
       return
     }
 
@@ -46,7 +51,6 @@ export const processMatchUpdate = async (res) => {
     recentBalls.splice(ballToProcess)
 
     const ballData = res.data.play.related_balls
-    const { id: matchId } = await pool.queryOne('SELECT id FROM match WHERE key = $1', [res.data.key])
 
     // get player id from player keys
     const allPlayerKeys = new Set()
@@ -55,11 +59,11 @@ export const processMatchUpdate = async (res) => {
       allPlayerKeys.add(ball.batsman.player_key)
       allPlayerKeys.add(ball.bowler.player_key)
     }
-    const playerIdKeyMap = await playersKeyToId(Array.from(allPlayerKeys))
+    const playerIdKeyMap = await playersKeyToId(Array.from(allPlayerKeys), client)
 
     // get team id from team keys
     const teamKeys = [res.data.teams.a.key, res.data.teams.b.key]
-    const { rows: teamsId } = await pool.query('SELECT id FROM team WHERE key IN ($1, $2);', teamKeys)
+    const { rows: teamsId } = await client.query('SELECT id FROM team WHERE key IN ($1, $2);', teamKeys)
 
     // Get balls data from the ids extracted above
     const ballsToProcess = []
@@ -87,7 +91,7 @@ export const processMatchUpdate = async (res) => {
       })
     }
 
-    await pool.insertMany(ballsToProcess, 'ball_by_ball_score', upsertStatement)
+    await client.insertMany(ballsToProcess, 'ball_by_ball_score', upsertStatement)
 
     const lastBall = ballsToProcess[0]
     await asyncQueue.add(tasks.processBallUpdate, {
@@ -99,9 +103,11 @@ export const processMatchUpdate = async (res) => {
   } catch (err) {
     console.error(err)
     console.error(JSON.stringify(res))
+  } finally {
+    client.release()
   }
 }
 
-export const overSlot = 5
+export const slotRange = 5
 
-export const ballToOverRange = (num) => Math.ceil(num / overSlot) * overSlot
+export const ballToOverRange = (num) => Math.ceil(num / slotRange) * slotRange

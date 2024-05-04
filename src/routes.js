@@ -7,6 +7,7 @@ import { insertTestBalldata } from './modules/internal/insert_test_data.js'
 import { getResult, ticketResultRoute } from './modules/internal/reports.js'
 import { processAsyncTasks } from './modules/async_processing/index.js'
 import { getPlayersV1 } from './modules/betting/player.js'
+import { webhook } from './modules/cricket_api/utils.js'
 
 // ****************** Public Routes ******************
 
@@ -31,6 +32,7 @@ export const privateRoutes = (fastify, options, done) => {
   fastify.get('/internal/:matchId/:innings/:rangeId/result', getResult)
   fastify.post('/internal/ticket/:ticketId/result', ticketResultRoute)
   fastify.post('/internal/process-async', processAsyncTasks)
+  fastify.post('/internal/webhook/cricket-api', webhook)
 
   done()
 }

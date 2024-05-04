@@ -1,6 +1,6 @@
 import { pool } from '../../utils/postgres.js'
 
-export const processAllPayout = async (data) => {
+export async function processAllPayout(data) {
   const more = await processPayout(data)
   if (more) {
     return await processAllPayout(data)

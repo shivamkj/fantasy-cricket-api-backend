@@ -17,7 +17,7 @@ WHERE match_id = $1
     const { rows: allLobbies } = await client.query(lobbiesQry, [data.matchId, data.ballRangeId, data.teamId])
 
     for (const { lobby_id } of allLobbies) {
-      const { commission } = await pool.queryOne(`SELECT commission FROM lobby WHERE id = $1;`, [lobby_id])
+      const { commission } = await client.queryOne(`SELECT commission FROM lobby WHERE id = $1;`, [lobby_id])
 
       const totalBetQry = `
 SELECT SUM(bet_price) as total
@@ -57,9 +57,9 @@ WHERE match_id = $1
 
     await client.query('COMMIT')
     return false
-  } catch (e) {
+  } catch (err) {
     await client.query('ROLLBACK')
-    throw e
+    throw err
   } finally {
     client.release()
   }

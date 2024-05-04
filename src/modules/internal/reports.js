@@ -22,7 +22,7 @@ export async function ticketResultRoute(request, reply) {
   if (!ticketId) throw new ClientErr('matchId not passed')
 
   const sqlQuery = `SELECT * FROM ticket WHERE id = $1;`
-  const { rows } = await pool.query(sqlQuery, [ticketId])
-  if (rows.length == 0) throw new NotFound('ticket')
-  reply.send(await ticketResult(rows[0]))
+  const ticket = await pool.queryOne(sqlQuery, [ticketId])
+  if (!ticket) throw new NotFound('ticket')
+  reply.send(await ticketResult(ticket))
 }

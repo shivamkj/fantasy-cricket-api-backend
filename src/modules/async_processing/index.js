@@ -1,27 +1,24 @@
 import { fastify, ClientErr } from '../../utils/fastify.js'
 import { PROD } from '../../utils/helper.js'
-import { fetchMatches } from '../cricket_api/fetch_matches.js'
 import { Queue, Worker } from 'bullmq'
-import { listenMatchUpdate, processBallUpdate, processLiveMatch } from './live_match.js'
-import { setupLiveMatch } from './match.js'
+import { endMatch, processBallUpdate, processLiveMatch, statMatch } from './live_match.js'
 import { addCronJobs, processHourly } from './cron.js'
 import { calculateAllPayouts } from './calculate_payouts.js'
 import { calculateAllWins } from './calculate_wins.js'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js'
 import { FastifyAdapter } from '@bull-board/fastify'
+import { processAllPayout } from './process_payout.js'
 
 export const tasks = {
-  calculatePayout: 'calculatePayout',
   calculateWins: 'calculateWins',
+  calculatePayout: 'calculatePayout',
   processPayout: 'processPayout',
-  processTicket: 'processTicket',
-  fetchMatches: 'fetchMatches',
-  listenBallUpdate: 'listenBallUpdate',
-  hourlyCron: 'hourlyCron',
-  processBallUpdate: 'processBallUpdate',
-  processLiveMatch: 'processLiveMatch',
-  setupLiveMatch: 'setupLiveMatch',
+  hourlyCron: 'hourlyCron', // hourly cron job for match listing, setting up team, squad & players, schedule async tasks
+  processBallUpdate: 'processBallUpdate', // to process every ball and perform any side effects required
+  processLiveMatch: 'processLiveMatch', // to monitor live match state and trigger async tasks
+  startMatch: 'startMatch',
+  endMatch: 'endMatch',
 }
 
 const connection = {
@@ -35,34 +32,32 @@ export const asyncQueue = new Queue(queueName, { connection })
 
 await addCronJobs()
 
+if (!PROD) await setupDashboard()
+
 const worker = new Worker(
   queueName,
   async ({ name, data }) => {
     if (!PROD) console.log('processing', name, data)
 
     switch (name) {
-      case tasks.fetchMatches:
-        await fetchMatches()
+      case tasks.hourlyCron:
+        await processHourly()
         break
 
       case tasks.processBallUpdate:
         await processBallUpdate(data)
         break
 
-      case tasks.listenBallUpdate:
-        await listenMatchUpdate(data.matchId)
-        break
-
-      case tasks.setupLiveMatch:
-        await setupLiveMatch(data.matchId)
-        break
-
-      case tasks.hourlyCron:
-        await processHourly()
-        break
-
       case tasks.processLiveMatch:
         await processLiveMatch(data.matchId)
+        break
+
+      case tasks.startMatch:
+        await endMatch(data)
+        break
+
+      case tasks.endMatch:
+        await statMatch(data)
         break
 
       case tasks.calculateWins:
@@ -71,6 +66,10 @@ const worker = new Worker(
 
       case tasks.calculatePayout:
         await calculateAllPayouts(data)
+        break
+
+      case tasks.processPayout:
+        await processAllPayout(data)
         break
 
       default:
@@ -93,6 +92,29 @@ if (!PROD) {
   })
 }
 
+export async function processAsyncTasks(request, reply) {
+  const taskName = request.query.taskName
+  if (!taskName) throw new ClientErr('task name missing')
+
+  switch (taskName) {
+    case tasks.calculateWins:
+    case tasks.calculatePayout:
+    case tasks.processPayout:
+    case tasks.hourlyCron:
+    case tasks.processBallUpdate:
+    case tasks.processLiveMatch:
+    case tasks.startMatch:
+    case tasks.endMatch:
+      await asyncQueue.add(taskName, request.body)
+      break
+
+    default:
+      throw new ClientErr('incorrect task name')
+  }
+
+  reply.send({ success: true })
+}
+
 async function setupDashboard() {
   const serverAdapter = new FastifyAdapter()
 
@@ -104,30 +126,4 @@ async function setupDashboard() {
   const path = '/internal/dashboard'
   serverAdapter.setBasePath(path)
   fastify.register(serverAdapter.registerPlugin(), { prefix: path })
-}
-
-await setupDashboard()
-
-export async function processAsyncTasks(request, reply) {
-  const taskName = request.query.taskName
-  if (!taskName) throw new ClientErr('task name missing')
-
-  switch (taskName) {
-    case tasks.processTicket:
-    case tasks.fetchMatches:
-    case tasks.hourlyCron:
-      await asyncQueue.add(taskName)
-      break
-
-    case tasks.processBallUpdate:
-    case tasks.listenBallUpdate:
-    case tasks.setupLiveMatch:
-      await asyncQueue.add(taskName, request.body)
-      break
-
-    default:
-      throw new ClientErr('incorrect task name')
-  }
-
-  reply.send({ success: true })
 }

@@ -1,5 +1,5 @@
 -- Delete all Tables
--- DROP TABLE user_data, team, player, match, squad,
+-- DROP TABLE user_data, team, player, match, squad, bet_slot,
 -- ball_by_ball_score, lobby, ticket, ticket_processed, bet;
 
 -- Disable exposing OpenAPI Schema by Postgrest
@@ -35,9 +35,11 @@ CREATE TABLE match (
   team1_id   SMALLINT NOT NULL REFERENCES team (id),
   team2_id   SMALLINT NOT NULL REFERENCES team (id),
   live       BOOLEAN NOT NULL DEFAULT FALSE,
+  ended      BOOLEAN NOT NULL DEFAULT FALSE,
   start_time TIMESTAMP NOT NULL,
   league     TEXT,
   selected   BOOLEAN NOT NULL DEFAULT FALSE,
+  last_slot  SMALLINT NOT NULL,
   setup_done BOOLEAN DEFAULT FALSE
 );
 ALTER TABLE match ENABLE ROW LEVEL SECURITY;

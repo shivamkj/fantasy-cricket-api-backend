@@ -1,5 +1,5 @@
 import { pool } from '../../utils/postgres.js'
-import { fetchMatches } from '../cricket_api/fetch_matches.js'
+import { createMatches } from '../cricket_api/create_matches.js'
 import { asyncQueue, tasks } from './index.js'
 import { setupLiveMatch } from './match.js'
 
@@ -7,7 +7,7 @@ const CHECK_WITHIN = 5 * 60 * 60 * 1000 // 5 hour
 
 export async function processHourly() {
   // 1. Fetch upcoming matches and add them to DB
-  await fetchMatches()
+  await createMatches()
 
   // 2. Check if any match will start in next few hours, if yes, then schedule a Repeatable job
   // (repeats every 1 minutes) with half an hour delay before match start time for each match
@@ -18,17 +18,18 @@ export async function processHourly() {
   const now = new Date()
   const fiveHoursLater = new Date(now.getTime() + CHECK_WITHIN)
 
-  const upcomingMatches = allMatches.filter(({ start_time }) => start_time >= now && start_time <= fiveHoursLater)
+  const upcomingMatches = allMatches.filter(({ start_time }) => start_time <= fiveHoursLater)
 
   for (const match of upcomingMatches) {
     await setupLiveMatch(match.id)
     const listenFrom = new Date(match.start_time.getTime())
-    listenFrom.setMinutes(listenFrom.getMinutes() - 30)
+    listenFrom.setMinutes(listenFrom.getMinutes() - 60)
     asyncQueue.add(
       tasks.processLiveMatch,
       { matchId: match.id },
       {
         jobId: `${tasks.processLiveMatch}-${match.id}`,
+        repeatJobKey: `${tasks.processLiveMatch}-${match.id}`,
         repeat: { pattern: '*/1 * * * *', startDate: listenFrom },
       }
     )

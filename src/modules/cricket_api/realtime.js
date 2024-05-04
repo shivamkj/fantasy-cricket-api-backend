@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client'
 import { getAuthToken } from './utils.js'
-import { processMatchUpdate } from './process_ball.js'
+import { processMatchUpdate } from './process_update.js'
 
 class _MatchSocket {
   _socket
