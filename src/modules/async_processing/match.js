@@ -1,14 +1,14 @@
 import { pool } from '../../utils/postgres.js'
-import { currencyTypeArr } from '../constants.js'
+import { currencyType } from '../constants.js'
 import { addPlayers } from '../cricket_api/player.js'
 
 const defaultLobbies = [
-  { title: 'Star 50', entry_price: 50, currency_type: currencyTypeArr[0], bet_price: 20, commission: 5 },
-  { title: 'Legend 100', entry_price: 100, currency_type: currencyTypeArr[1], bet_price: 30, commission: 5 },
-  { title: 'High Stakes', entry_price: 200, currency_type: currencyTypeArr[0], bet_price: 40, commission: 0 },
-  { title: 'Social Lobby', entry_price: 150, currency_type: currencyTypeArr[2], bet_price: 30, commission: 5 },
-  { title: 'Social Lobby', entry_price: 250, currency_type: currencyTypeArr[2], bet_price: 50, commission: 0 },
-  { title: 'Private Lobby', entry_price: 50, currency_type: currencyTypeArr[2], bet_price: 20, commission: 5 },
+  { title: 'Star 50', entry_price: 50, currency_type: currencyType.coin, bet_price: 20, commission: 5 },
+  { title: 'Legend 100', entry_price: 100, currency_type: currencyType.token, bet_price: 30, commission: 5 },
+  { title: 'High Stakes', entry_price: 200, currency_type: currencyType.coin, bet_price: 40, commission: 0 },
+  { title: 'Social Lobby', entry_price: 150, currency_type: currencyType.money, bet_price: 30, commission: 5 },
+  { title: 'Social Lobby', entry_price: 250, currency_type: currencyType.money, bet_price: 50, commission: 0 },
+  { title: 'Private Lobby', entry_price: 50, currency_type: currencyType.money, bet_price: 20, commission: 5 },
 ]
 
 export async function setupLiveMatch(matchId) {

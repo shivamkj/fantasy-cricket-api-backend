@@ -1,4 +1,4 @@
-export const betType = {
+export const betType = Object.freeze({
   batterRun: 'batterRun',
   runRate: 'runRate',
   bowlerRun: 'bowlerRun',
@@ -7,31 +7,21 @@ export const betType = {
   teamRun: 'teamRun',
   boundaries: 'boundaries',
   batterWicket: 'batterWicket',
-}
-export const betTypeArr = [
-  betType.batterRun, // 0
-  betType.runRate, // 1
-  betType.bowlerRun, // 2
-  betType.wicket, // 3
-  betType.economy, // 4
-  betType.teamRun, // 5
-  betType.boundaries, // 6
-  betType.batterWicket, // 7
-]
+})
+export const betValues = Object.values(betType)
 
-export const ticketTypes = {
+export const ticketType = Object.freeze({
   batting: 'batting',
   bowling: 'bowling',
   overall: 'overall',
-}
-export const ticketTypeArr = [ticketTypes.batting, ticketTypes.bowling, ticketTypes.overall]
+})
+export const ticketValues = Object.values(ticketType)
 
-export const currencyType = {
+export const currencyType = Object.freeze({
   coin: 'coin',
   token: 'token',
   money: 'money',
-}
-export const currencyTypeArr = [currencyType.coin, currencyType.token, currencyType.money]
+})
 
 export const getBallRange = (rangeId) => {
   const endRange = rangeId - 1 + 0.6

@@ -22,7 +22,7 @@ const checkBetResult = (bet, result) => {
       if (bet.range_id == result[betType.bowlerRun][bet.player_id]?.id) return true
       break
     case betType.batterWicket:
-      return false
+      if (bet.range_id == result[betType.batterWicket][bet.player_id]?.id) return true
       break
     case betType.wicket:
       if (bet.range_id == result[betType.wicket].id) return true

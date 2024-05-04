@@ -1,4 +1,4 @@
-import { betType, ticketTypes } from '../../src/modules/constants.js'
+import { betType, ticketType } from '../../src/modules/constants.js'
 import { users } from '../misc.js'
 
 export const ticketsM1I0 = [
@@ -6,7 +6,7 @@ export const ticketsM1I0 = [
   {
     ball_range_id: 5,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -18,7 +18,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -30,7 +30,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -40,7 +40,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -52,7 +52,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -63,7 +63,7 @@ export const ticketsM1I0 = [
   {
     ball_range_id: 10,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -75,7 +75,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -87,7 +87,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -97,7 +97,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -109,7 +109,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -120,7 +120,7 @@ export const ticketsM1I0 = [
   {
     ball_range_id: 15,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -132,7 +132,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -144,7 +144,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -154,7 +154,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -166,7 +166,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -177,7 +177,7 @@ export const ticketsM1I0 = [
   {
     ball_range_id: 20,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -189,7 +189,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -201,7 +201,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -211,7 +211,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[1].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -223,7 +223,7 @@ export const ticketsM1I0 = [
   {
     user_id: users[0].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -237,7 +237,7 @@ export const ticketsM1I1 = [
   {
     ball_range_id: 5,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -249,7 +249,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -261,7 +261,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -271,7 +271,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -283,7 +283,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 5,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -294,7 +294,7 @@ export const ticketsM1I1 = [
   {
     ball_range_id: 10,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -306,7 +306,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -318,7 +318,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -328,7 +328,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -340,7 +340,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 10,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -351,7 +351,7 @@ export const ticketsM1I1 = [
   {
     ball_range_id: 15,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -363,7 +363,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -375,7 +375,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -385,7 +385,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -397,7 +397,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 15,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },
@@ -408,7 +408,7 @@ export const ticketsM1I1 = [
   {
     ball_range_id: 20,
     user_id: users[0].id,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 40,
     bets: [
       { range_id: 15, bet_type: betType.batterRun, player_id: 10105 },
@@ -420,7 +420,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 40,
     bets: [
       { range_id: 10, bet_type: betType.bowlerRun, player_id: 12136 },
@@ -432,7 +432,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.bowling,
+    ticket_type: ticketType.bowling,
     bet_price: 60,
     bets: [
       { range_id: 1, bet_type: betType.economy },
@@ -442,7 +442,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[1].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.overall,
+    ticket_type: ticketType.overall,
     bet_price: 120,
     bets: [
       { range_id: 30, bet_type: betType.teamRun },
@@ -454,7 +454,7 @@ export const ticketsM1I1 = [
   {
     user_id: users[0].id,
     ball_range_id: 20,
-    ticket_type: ticketTypes.batting,
+    ticket_type: ticketType.batting,
     bet_price: 60,
     bets: [
       { range_id: 10, bet_type: betType.batterWicket, player_id: 12136 },

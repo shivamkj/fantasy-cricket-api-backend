@@ -126,3 +126,11 @@ CREATE TABLE bet (
   player_id INTEGER
 );
 ALTER TABLE bet ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE bet_slot (
+  match_id     INTEGER PRIMARY KEY REFERENCES match (id),
+  batting_team SMALLINT REFERENCES team (id),
+  bowling_team SMALLINT REFERENCES team (id),
+  slot_range   SMALLINT
+);
+ALTER TABLE bet_slot ENABLE ROW LEVEL SECURITY;

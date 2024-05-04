@@ -1,13 +1,12 @@
 import { ClientErr, NotFound } from '../../utils/fastify.js'
 import { pool } from '../../utils/postgres.js'
 import { ajv } from '../../utils/validator.js'
-import { getTeamsId } from '../score_card.js'
-import { betTypeArr, ticketTypeArr } from '../constants.js'
+import { betValues, ticketValues } from '../constants.js'
 
 const betReqBody = {
   type: 'object',
   properties: {
-    ticketType: { type: 'integer' },
+    ticketType: { type: 'string' },
     lobbyId: { type: 'integer' },
     bets: {
       type: 'array',
@@ -15,7 +14,7 @@ const betReqBody = {
         type: 'object',
         properties: {
           range_id: { type: 'integer' },
-          betType: { type: 'integer' },
+          betType: { type: 'string' },
           playerId: { type: 'integer' },
         },
         required: ['range_id', 'betType'],
@@ -39,17 +38,19 @@ export async function buyTicketV1(request, reply) {
   if (!validated) throw new ClientErr('invalid request body')
 
   const { ticketType, bets } = request.body
-  if (!(ticketType >= 0 && ticketType < ticketTypeArr.length)) throw new ClientErr('invalid ticket type')
+  if (!ticketValues.includes(ticketType)) throw new ClientErr('invalid ticket type')
 
   for (const bet of bets) {
-    const betType = bet.betType
-    if (!(betType >= 0 && betType < betTypeArr.length)) throw new ClientErr('invalid bet type')
+    if (!betValues.includes(bet.betType)) throw new ClientErr('invalid bet type')
   }
 
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
-    const { team1Id } = await getTeamsId(matchId, client)
+
+    const betDetailQry = 'SELECT batting_team, slot_range from bet_slot WHERE match_id = $1'
+    const betSlot = await client.queryOne(betDetailQry, [matchId])
+    if (!betSlot) throw new ClientErr('betting not allowed')
 
     const lobbyDetailsQry = 'SELECT id, entry_price, bet_price FROM lobby WHERE id = $1;'
     const lobby = await client.queryOne(lobbyDetailsQry, [request.body.lobbyId])
@@ -61,27 +62,24 @@ ticket(id, match_id, team_id, lobby_id, user_id, ticket_type, ball_range_id, tic
 VALUES(gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 `
-    // TODO: dynamic ball range and dynamic teamId
-
-    const { rows } = await client.query(insertTktQry, [
+    const { id: ticketId } = await client.queryOne(insertTktQry, [
       matchId,
-      team1Id,
+      betSlot.batting_team,
       lobby.id,
       request.userId,
-      ticketTypeArr[ticketType],
-      5,
+      ticketType,
+      betSlot.slot_range,
       lobby.entry_price,
       lobby.bet_price * bets.length,
       bets.length,
     ])
-    const ticketId = rows[0].id
 
     // insert bets taken for this ticket
     const betValues = []
     const query = []
     let paramsCount = 0
     for (const bet of bets) {
-      betValues.push(ticketId, bet.range_id, betTypeArr[bet.betType], bet.playerId)
+      betValues.push(ticketId, bet.range_id, bet.betType, bet.playerId)
       query.push(`($${paramsCount + 1}, $${paramsCount + 2}, $${paramsCount + 3}, $${paramsCount + 4})`)
       paramsCount += 4
     }
@@ -102,11 +100,11 @@ RETURNING id;
 }
 
 export async function getBetPriceV1(request, reply) {
-  const matchId = request.params.matchId
-  if (!matchId) throw new ClientErr('matchId not passed')
+  const lobbyId = request.params.lobbyId
+  if (!lobbyId) throw new ClientErr('lobbyId not passed')
 
-  const sqlQuery = `SELECT price, commission FROM bet_price WHERE match_id = $1;`
-  const { rows: price } = await pool.query(sqlQuery, [matchId])
-  if (price.length == 0) throw new NotFound('match')
-  reply.send(price[0])
+  const sqlQuery = `SELECT bet_price, commission FROM lobby WHERE id = $1;`
+  const details = await pool.queryOne(sqlQuery, [lobbyId])
+  if (!details) throw new NotFound('match')
+  reply.send(details)
 }
