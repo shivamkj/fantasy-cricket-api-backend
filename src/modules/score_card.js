@@ -85,7 +85,7 @@ SELECT
 FROM ball_by_ball_score bbs
 JOIN player p ON bbs.bowler = p.id
 WHERE match_id = $1 AND team_id = $2
-GROUP BY p.id;  
+GROUP BY p.id;
 `
 
     const { rows: team1Bowlers } = await client.query(bowlersQuery, [matchId, team1Id])
@@ -105,7 +105,7 @@ WHERE match_id = $1 AND team_id = $2;
 
     const totalQuery = `
 SELECT
-  COALESCE(SUM(runs_off_bat), 0) AS run,
+  SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS run,
   COUNT(wicket) AS wicket,
   COALESCE(MAX(ball), 0) AS over
 FROM ball_by_ball_score

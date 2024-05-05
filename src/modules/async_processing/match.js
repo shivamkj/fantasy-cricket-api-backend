@@ -1,5 +1,6 @@
 import { pool } from '../../utils/postgres.js'
 import { currencyType } from '../constants.js'
+import { subscribeToMatch } from '../cricket_api/create_matches.js'
 import { addPlayers } from '../cricket_api/player.js'
 
 const defaultLobbies = [
@@ -12,14 +13,17 @@ const defaultLobbies = [
 ]
 
 export async function setupLiveMatch(matchId) {
-  const { setup_done } = await pool.queryOne('SELECT setup_done FROM match WHERE id = $1', [matchId])
-  if (setup_done) return
+  const { setup_done, key } = await pool.queryOne('SELECT key, setup_done FROM match WHERE id = $1', [matchId])
+  if (setup_done) return false
 
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
 
     await addPlayers(matchId, client)
+
+    await subscribeToMatch(key, 'web_socket')
+    // await subscribeToMatch(key, 'web_hook')
 
     const lobbies = Object.assign([], defaultLobbies)
     for (const lobby of lobbies) {
@@ -30,6 +34,8 @@ export async function setupLiveMatch(matchId) {
     await client.query('UPDATE match SET setup_done = TRUE WHERE id = $1', [matchId])
 
     await client.query('COMMIT')
+
+    return true
   } catch (err) {
     await client.query('ROLLBACK')
     throw err

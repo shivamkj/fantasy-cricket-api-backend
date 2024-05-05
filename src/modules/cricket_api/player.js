@@ -60,7 +60,7 @@ WITH temp (k) AS (
 )
 SELECT p.id, p.key
 FROM player p
-JOIN temp ON p.key = temp.k;  
+JOIN temp ON p.key = temp.k;
 `
   const { rows: playerIds } = await (client ?? pool).query(playerIdQry)
   const playerIdKeyMap = {}

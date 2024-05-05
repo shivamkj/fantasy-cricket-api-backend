@@ -4,6 +4,7 @@ import 'dotenv/config'
 import { fastify } from './utils/fastify.js'
 import { pool } from './utils/postgres.js'
 import './routes.js'
+import { worker } from './modules/async_processing/index.js'
 
 const PORT = process.env.PORT || 3003
 
@@ -19,8 +20,17 @@ async function cleanUp() {
   console.log('cleaning up everything')
   await fastify.close()
   await pool.end()
+  await worker.close()
   console.log('shutting down')
 }
 
 process.once('SIGTERM', cleanUp)
 process.once('SIGINT', cleanUp)
+
+process.on('uncaughtException', function (err) {
+  console.error('Uncaught exception', err)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at: Promise', { promise, reason })
+})

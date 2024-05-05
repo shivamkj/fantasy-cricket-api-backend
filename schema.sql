@@ -38,7 +38,7 @@ CREATE TABLE match (
   ended      BOOLEAN NOT NULL DEFAULT FALSE,
   start_time TIMESTAMP NOT NULL,
   league     TEXT,
-  selected   BOOLEAN NOT NULL DEFAULT FALSE,
+  selected   BOOLEAN NOT NULL DEFAULT TRUE,
   last_slot  SMALLINT NOT NULL,
   setup_done BOOLEAN DEFAULT FALSE
 );
@@ -52,7 +52,7 @@ CREATE TABLE squad (
 ALTER TABLE squad ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE ball_by_ball_score (
-  id           BIGINT PRIMARY KEY,
+  id           BIGINT,
   match_id     INTEGER NOT NULL REFERENCES match (id),
   batter       INTEGER NOT NULL REFERENCES player (id),
   bowler       INTEGER NOT NULL REFERENCES player (id),
@@ -68,7 +68,8 @@ CREATE TABLE ball_by_ball_score (
   wicket       BOOLEAN,
   six          BOOLEAN,
   four         BOOLEAN,
-  commentary   TEXT
+  commentary   TEXT,
+  PRIMARY KEY (id, match_id, team_id)
 );
 ALTER TABLE ball_by_ball_score ENABLE ROW LEVEL SECURITY;
 

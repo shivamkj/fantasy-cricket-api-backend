@@ -5,6 +5,8 @@ import { setupLiveMatch } from './match.js'
 
 const CHECK_WITHIN = 5 * 60 * 60 * 1000 // 5 hour
 
+export const liveRepeatCheck = '*/1 * * * *'
+
 export async function processHourly() {
   // 1. Fetch upcoming matches and add them to DB
   await createMatches()
@@ -12,7 +14,7 @@ export async function processHourly() {
   // 2. Check if any match will start in next few hours, if yes, then schedule a Repeatable job
   // (repeats every 1 minutes) with half an hour delay before match start time for each match
   const { rows: allMatches } = await pool.query(
-    'SELECT id, start_time FROM match WHERE live = FALSE AND selected = TRUE;'
+    'SELECT id, start_time FROM match WHERE live = FALSE AND selected = TRUE AND ended = FALSE;'
   )
 
   const now = new Date()
@@ -30,7 +32,7 @@ export async function processHourly() {
       {
         jobId: `${tasks.processLiveMatch}-${match.id}`,
         repeatJobKey: `${tasks.processLiveMatch}-${match.id}`,
-        repeat: { pattern: '*/1 * * * *', startDate: listenFrom },
+        repeat: { pattern: liveRepeatCheck, startDate: listenFrom },
       }
     )
   }

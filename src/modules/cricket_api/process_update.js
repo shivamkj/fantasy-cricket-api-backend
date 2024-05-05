@@ -5,7 +5,7 @@ import { playersKeyToId } from './player.js'
 const ballToProcess = 8
 
 const upsertStatement = `
-ON CONFLICT (id)
+ON CONFLICT (id, match_id, team_id)
 DO UPDATE SET
   runs_off_bat = excluded.runs_off_bat,
   extra = excluded.extra,
@@ -17,7 +17,9 @@ DO UPDATE SET
   wicket = excluded.wicket,
   six = excluded.six,
   four = excluded.four,
-  commentary = excluded.commentary;
+  commentary = excluded.commentary,
+  batter = excluded.batter,
+  bowler = excluded.bowler;
 `
 
 export const processMatchUpdate = async (res) => {
@@ -36,6 +38,8 @@ export const processMatchUpdate = async (res) => {
       console.log(JSON.stringify(res))
       asyncQueue.add(tasks.endMatch, { matchId })
       return
+    } else if (status != 'started') {
+      console.warn('======= unknown status found =======', status)
     }
 
     const recentOvers = res.data.play?.live?.recent_overs

@@ -3,7 +3,7 @@ import { projectKey, baseUrl, getAuthToken, authHeader } from './utils.js'
 import { pool } from '../../utils/postgres.js'
 
 export async function createMatches() {
-  const response = await fetch(baseUrl + `/v5/cricket/${projectKey}/featured-matches-2/`, {
+  const response = await fetch(`${baseUrl}/v5/cricket/${projectKey}/featured-matches-2/`, {
     headers: { [authHeader]: await getAuthToken() },
   })
   const body = await response.json()
@@ -43,4 +43,14 @@ function getLastSlot(format) {
   else if (format === 'oneday') return 50
   else if (format === 'test') return 90
   throw new Error('unknown match format')
+}
+
+export async function subscribeToMatch(matchKey, protocol) {
+  const response = await fetch(`${baseUrl}/v5/cricket/${projectKey}/match/${matchKey}/subscribe/`, {
+    method: 'POST',
+    headers: { [authHeader]: await getAuthToken(), 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ method: protocol }),
+  })
+  if (response.status == 202) return true
+  else throw Error('request failed')
 }

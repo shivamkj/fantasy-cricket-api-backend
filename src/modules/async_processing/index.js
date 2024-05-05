@@ -1,7 +1,7 @@
 import { fastify, ClientErr } from '../../utils/fastify.js'
 import { PROD } from '../../utils/helper.js'
 import { Queue, Worker } from 'bullmq'
-import { endMatch, processBallUpdate, processLiveMatch, statMatch } from './live_match.js'
+import { endMatch, processBallUpdate, processLiveMatch, startMatch } from './live_match.js'
 import { addCronJobs, processHourly } from './cron.js'
 import { calculateAllPayouts } from './calculate_payouts.js'
 import { calculateAllWins } from './calculate_wins.js'
@@ -34,7 +34,7 @@ await addCronJobs()
 
 if (!PROD) await setupDashboard()
 
-const worker = new Worker(
+export const worker = new Worker(
   queueName,
   async ({ name, data }) => {
     if (!PROD) console.log('processing', name, data)
@@ -53,11 +53,11 @@ const worker = new Worker(
         break
 
       case tasks.startMatch:
-        await endMatch(data)
+        await startMatch(data)
         break
 
       case tasks.endMatch:
-        await statMatch(data)
+        await endMatch(data)
         break
 
       case tasks.calculateWins:

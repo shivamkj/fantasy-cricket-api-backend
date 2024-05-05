@@ -4,7 +4,8 @@ import { slotRange } from '../cricket_api/process_update.js'
 import { matchSocket } from '../cricket_api/realtime.js'
 import { matchIdToKey } from '../cricket_api/utils.js'
 import { fetchLiveMatchScoreV1, fetchScoreCardV1, getTeamsId } from '../score_card.js'
-import { tasks } from './index.js'
+import { liveRepeatCheck } from './cron.js'
+import { asyncQueue, tasks } from './index.js'
 import { processTickets } from './tickets.js'
 
 export async function processLiveMatch(matchId) {
@@ -14,8 +15,7 @@ export async function processLiveMatch(matchId) {
   await processTickets()
 }
 
-export async function statMatch({ matchId, toss }) {
-  console.log('statMatch', { matchId, ...toss })
+export async function startMatch({ matchId, toss }) {
   const client = await pool.connect()
   try {
     const { team1Id, team2Id } = await getTeamsId(matchId, client)
@@ -29,16 +29,14 @@ export async function statMatch({ matchId, toss }) {
     }
     const bowlingTeam = battingTeam == team1Id ? team2Id : team1Id
 
-    await client.query(`UPDATE match SET live = TRUE WHERE id = $1;`, [matchId])
+    const updateMatchQry = `UPDATE match SET team1_id = $1, team2_id = $2, live = TRUE WHERE id = $3;`
+    await client.query(updateMatchQry, [battingTeam, bowlingTeam, matchId])
 
     const initialSlotQry = `
 INSERT INTO bet_slot (match_id, batting_team, bowling_team, slot_range)
 VALUES ($1, $2, $3, 5) ON CONFLICT (match_id) DO NOTHING;
 `
     await client.query(initialSlotQry, [matchId, battingTeam, bowlingTeam])
-
-    const updateTeamId = `UPDATE match SET team1_id = $1, team2_id = $2 WHERE id = $3;`
-    await client.query(updateTeamId, [battingTeam, bowlingTeam, matchId])
   } catch (err) {
     throw err
   } finally {
@@ -47,9 +45,10 @@ VALUES ($1, $2, $3, 5) ON CONFLICT (match_id) DO NOTHING;
 }
 
 export async function endMatch({ matchId }) {
-  console.log('endMatch', { matchId })
   await pool.query(`UPDATE match SET live = FALSE, ended = TRUE WHERE id = $1;`, [matchId])
-  const isRemoved = await myQueue.removeRepeatableByKey(`${tasks.processLiveMatch}-${matchId}`)
+  const isRemoved = await asyncQueue.removeRepeatableByKey(
+    `${tasks.processLiveMatch}:${tasks.processLiveMatch}-${matchId}:::${liveRepeatCheck}`
+  )
   console.log('removed processLiveMatch repeatble job', isRemoved)
 }
 
@@ -68,12 +67,12 @@ VALUES ($1, $2, $3) ON CONFLICT (match_id, ball_range_id, team_id) DO NOTHING;
   // update bet_slot
   if (!Cache.get(`bet_slot-${currentSlot}`)) {
     const nextSlot = currentSlot + slotRange
-    const { last_slot } = pool.queryOne('SELECT last_slot FROM match WHERE id = $1', [data.matchId])
-    console.log(last_slot)
+    const { last_slot } = await pool.queryOne('SELECT last_slot FROM match WHERE id = $1', [data.matchId])
     if (nextSlot > last_slot) {
+      // TODO: stop team swap several times
       await pool.query('UPDATE bet_slot SET slot_range = 5, batting_team = bowling_team, bowling_team = batting_team;')
     } else {
-      await pool.query('UPDATE bet_slot SET slot_range = $1;', [last_slot])
+      await pool.query('UPDATE bet_slot SET slot_range = $1;', [nextSlot])
     }
     Cache.set(`bet_slot-${currentSlot}`, true, tll['5min'])
   }

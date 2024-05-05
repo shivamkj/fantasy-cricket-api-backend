@@ -3,7 +3,10 @@ const { Pool } = pg
 
 export const pool = new Pool({
   connectionString: process.env.CONNECTION_STRING,
+  keepAlive: true,
   idleTimeoutMillis: 30000,
+  max: 20,
+  connectionTimeoutMillis: 5000,
 })
 
 async function queryOne(query, values) {
