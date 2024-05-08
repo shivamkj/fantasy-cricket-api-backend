@@ -30,10 +30,3 @@ export async function matchIdToKey(matchId, client) {
   const { key } = await (client ?? pool).queryOne('SELECT key FROM match WHERE id = $1;', [matchId])
   return key
 }
-
-export async function webhook(request, reply) {
-  console.log('======= webhook')
-  console.log(request.body)
-  console.log('======= webhook')
-  reply.send('OK')
-}

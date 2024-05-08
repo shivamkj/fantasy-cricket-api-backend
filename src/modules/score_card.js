@@ -105,7 +105,7 @@ WHERE match_id = $1 AND team_id = $2;
 
     const totalQuery = `
 SELECT
-  SUM(COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS run,
+  COALESCE(SUM(runs_off_bat + extra), 0) AS run,
   COUNT(wicket) AS wicket,
   COALESCE(MAX(ball), 0) AS over
 FROM ball_by_ball_score

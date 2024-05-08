@@ -22,8 +22,8 @@ SELECT
 FROM "match" m
 JOIN team t1 ON m.team1_id = t1.id
 JOIN team t2 ON m.team2_id = t2.id
-WHERE m.id > $1
-ORDER BY m.live DESC, m.start_time DESC
+WHERE m.ended IS FALSE AND m.id > $1
+ORDER BY m.ended, m.start_time
 LIMIT $2;
 `
 
