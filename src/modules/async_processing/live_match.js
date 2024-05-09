@@ -18,16 +18,21 @@ export async function processLiveMatch(matchId) {
 export async function startMatch({ matchId, toss }) {
   const client = await pool.connect()
   try {
-    const { team1Id, team2Id } = await getTeamsId(matchId, client)
+    await client.query('BEGIN')
+    const { team1_id, team2_id, live } = await client.queryOne(
+      'SELECT team1_id, team2_id, live FROM match WHERE id = $1',
+      [matchId]
+    )
+    if (live == true) return
 
     // calulate batting & bowling team id from toss data
     let battingTeam
     if (toss.elected == 'bat') {
-      battingTeam = toss.winner == 'a' ? team1Id : team2Id
+      battingTeam = toss.winner == 'a' ? team1_id : team2_id
     } else if (toss.elected == 'bowl') {
-      battingTeam = toss.winner == 'a' ? team2Id : team1Id
+      battingTeam = toss.winner == 'a' ? team2_id : team1_id
     }
-    const bowlingTeam = battingTeam == team1Id ? team2Id : team1Id
+    const bowlingTeam = battingTeam == team1_id ? team2_id : team1_id
 
     const updateMatchQry = `UPDATE match SET team1_id = $1, team2_id = $2, live = TRUE WHERE id = $3;`
     await client.query(updateMatchQry, [battingTeam, bowlingTeam, matchId])
@@ -37,7 +42,9 @@ INSERT INTO bet_slot (match_id, batting_team, bowling_team, slot_range)
 VALUES ($1, $2, $3, 5) ON CONFLICT (match_id) DO NOTHING;
 `
     await client.query(initialSlotQry, [matchId, battingTeam, bowlingTeam])
+    await client.query('COMMIT')
   } catch (err) {
+    await client.query('ROLLBACK')
     throw err
   } finally {
     client.release()

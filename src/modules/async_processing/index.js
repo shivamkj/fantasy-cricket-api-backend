@@ -28,7 +28,17 @@ const connection = {
 
 const queueName = 'asyncQueue'
 
-export const asyncQueue = new Queue(queueName, { connection })
+export const asyncQueue = new Queue(queueName, {
+  connection,
+  defaultJobOptions: {
+    removeOnComplete: 500,
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 3000,
+    },
+  },
+})
 
 await addCronJobs()
 

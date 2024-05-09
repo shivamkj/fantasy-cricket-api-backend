@@ -34,8 +34,6 @@ export const processMatchUpdate = async (res) => {
       if (toss) asyncQueue.add(tasks.startMatch, { matchId, toss })
       return
     } else if (status == 'completed') {
-      console.log('completed status')
-      console.log(JSON.stringify(res))
       asyncQueue.add(tasks.endMatch, { matchId })
       return
     } else if (status != 'started') {

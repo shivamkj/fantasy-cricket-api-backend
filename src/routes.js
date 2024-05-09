@@ -23,6 +23,7 @@ export const privateRoutes = (fastify, options, done) => {
   fastify.get('/v1/matches/:lobbyId/bet', getBetPriceV1)
   fastify.get('/v1/matches/:matchId/tickets', listUserTicketV1)
   fastify.post('/v1/matches/:matchId/ticket', buyTicketV1)
+  fastify.put('/v1/matches/:matchId/ticket', buyTicketV1)
   fastify.get('/v1/users/tickets', aggregateUserTicketV1)
   fastify.get('/v1/matches/:matchId/:betType/players', getPlayersV1)
 

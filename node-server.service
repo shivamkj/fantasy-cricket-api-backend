@@ -10,7 +10,7 @@ ExecStart=/usr/bin/node src/index.js
 WorkingDirectory=/home/ubuntu/app/node-backend/
 Type=simple
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 User=ubuntu
 Group=ubuntu
 # Configure Environment Variables
