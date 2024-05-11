@@ -7,7 +7,7 @@ After=network-online.target
 
 [Service]
 ExecStart=/usr/bin/node src/index.js
-WorkingDirectory=/home/ubuntu/app/node-backend/
+WorkingDirectory=/home/ubuntu/node-backend/
 Type=simple
 Restart=on-failure
 RestartSec=5

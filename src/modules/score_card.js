@@ -63,13 +63,14 @@ SELECT
   COUNT(DISTINCT bbs.ball) AS balls,
   COUNT(bbs.four) AS fours,
   COUNT(bbs.six) AS sixes,
-  ROUND(SUM(bbs.runs_off_bat) * 100.0 / COUNT(*), 2) AS strike_rate
+  ROUND((SUM(bbs.runs_off_bat)::numeric / COUNT(DISTINCT bbs.ball)) * 100, 2) AS strike_rate
 FROM
   ball_by_ball_score bbs
 JOIN
   player p ON bbs.batter = p.id
 WHERE bbs.match_id = $1 AND bbs.team_id = $2
-GROUP BY p.id;
+GROUP BY p.id
+ORDER BY MIN(bbs.ball);
 `
     const { rows: team1Batters } = await client.query(battersQuery, [matchId, team1Id])
     const { rows: team2Batters } = await client.query(battersQuery, [matchId, team2Id])
@@ -77,15 +78,16 @@ GROUP BY p.id;
     const bowlersQuery = `
 SELECT
   p.jersey_name AS name,
-  ROUND(COUNT(bbs.ball) / 6.0, 1) AS overs,
-  SUM(CASE WHEN runs_off_bat = 0 AND wide = 0 AND noball = 0 THEN 1 ELSE 0 END) AS maiden,
-  SUM(bbs.runs_off_bat + COALESCE(bbs.extra, 0)) AS run,
+  (COUNT(DISTINCT bbs.ball) / 6) + ROUND(MOD(COUNT(DISTINCT bbs.ball), 6) / 10.0, 1) AS overs,
+  COUNT(bbs.maiden) AS maiden,
+  SUM(bbs.runs_off_bat + COALESCE(bbs.wide, 0) + COALESCE(bbs.noball, 0)) AS run,
   COUNT(bbs.wicket) AS wicket,
-  ROUND(SUM(bbs.runs_off_bat + COALESCE(bbs.extra, 0)) / (COUNT(bbs.ball) / 6.0), 2) AS economy
+  ROUND(SUM(bbs.runs_off_bat + COALESCE(bbs.wide, 0) + COALESCE(bbs.noball, 0)) / (COUNT(DISTINCT bbs.ball) / 6.0), 2) AS economy
 FROM ball_by_ball_score bbs
 JOIN player p ON bbs.bowler = p.id
 WHERE match_id = $1 AND team_id = $2
-GROUP BY p.id;
+GROUP BY p.id
+ORDER BY MIN(bbs.ball);
 `
 
     const { rows: team1Bowlers } = await client.query(bowlersQuery, [matchId, team1Id])
@@ -93,10 +95,10 @@ GROUP BY p.id;
 
     const extrasQuery = `
 SELECT
-  COUNT(bye) AS bye,
-  COUNT(legbye) AS legbye,
-  COUNT(wide) AS wide,
-  COUNT(noball) AS noball
+  COALESCE(SUM(bye), 0) AS bye,
+  COALESCE(SUM(legbye), 0) AS legbye,
+  COALESCE(SUM(wide), 0) AS wide,
+  COALESCE(SUM(noball), 0) AS noball
 FROM ball_by_ball_score
 WHERE match_id = $1 AND team_id = $2;
 `
@@ -106,7 +108,7 @@ WHERE match_id = $1 AND team_id = $2;
     const totalQuery = `
 SELECT
   COALESCE(SUM(runs_off_bat + extra), 0) AS run,
-  COUNT(wicket) AS wicket,
+  COUNT(wicket) + COUNT(run_out) AS wicket,
   COALESCE(MAX(ball), 0) AS over
 FROM ball_by_ball_score
 WHERE match_id = $1 AND team_id = $2;

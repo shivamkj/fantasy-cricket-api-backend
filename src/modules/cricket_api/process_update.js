@@ -19,7 +19,8 @@ DO UPDATE SET
   four = excluded.four,
   commentary = excluded.commentary,
   batter = excluded.batter,
-  bowler = excluded.bowler;
+  bowler = excluded.bowler,
+  ball = excluded.ball;
 `
 
 export const processMatchUpdate = async (res) => {
@@ -87,6 +88,7 @@ export const processMatchUpdate = async (res) => {
         legbye: ball.ball_type == 'leg_bye' ? ball.team_score.extras : null,
         penalty: ball.ball_type == 'penalty' ? ball.team_score.extras : null,
         wicket: ball.bowler.is_wicket ? true : null,
+        run_out: ball.wicket?.wicket_type == 'run_out' ? true : null,
         four: ball.batsman.is_four ? true : null,
         six: ball.batsman.is_six ? true : null,
         commentary: ball.comment,

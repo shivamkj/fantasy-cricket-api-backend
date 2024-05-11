@@ -31,9 +31,12 @@ WHERE user_id = $1 AND match_id = $2
     if (ticket.payout != null && ticket.payout > 0) {
       moneyWon += ticket.payout
       winningTicket++
-      ticket.won = true
-    } else if (ticket.payout == 0) {
-      ticket.won = false
+      ticket.won = 1
+    } else if (ticket.payout === 0) {
+      ticket.won = -1
+    } else {
+      ticket.won = 0
+      ticket.payout = 0
     }
   }
 
