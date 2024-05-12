@@ -8,8 +8,8 @@ export async function createMatches() {
   })
   const body = await response.json()
 
+  console.log(body, response.status)
   const allMatches = []
-
   for (const match of body.data.matches) {
     if (match.status == 'completed') continue
 
