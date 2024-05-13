@@ -17,11 +17,17 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, _) => {
 })
 
 async function cleanUp() {
-  console.log('cleaning up everything')
-  await fastify.close()
-  await worker.close(true)
-  await pool.end()
-  console.log('shutting down')
+  try {
+    console.log('cleaning up everything')
+    await fastify.close()
+    await worker.close()
+    await pool.end()
+    console.log('shutting down')
+    process.exit(0)
+  } catch (error) {
+    console.error(error)
+    process.exit(1)
+  }
 }
 
 process.once('SIGTERM', cleanUp)
