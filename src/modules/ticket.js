@@ -19,7 +19,7 @@ SELECT
   t.payout
 FROM ticket t
 JOIN match m ON m.id = t.match_id
-JOIN team t1 ON m.team2_id = t1.id
+JOIN team t1 ON m.team1_id = t1.id
 JOIN team t2 ON m.team2_id = t2.id
 WHERE user_id = $1 AND match_id = $2
 `
@@ -56,7 +56,7 @@ SELECT
   m.live
 FROM ticket t
 JOIN match m ON m.id = t.match_id
-JOIN team t1 ON m.team2_id = t1.id
+JOIN team t1 ON m.team1_id = t1.id
 JOIN team t2 ON m.team2_id = t2.id
 WHERE user_id = $1
 GROUP BY t.match_id, m.id, t1.id, t2.id;
