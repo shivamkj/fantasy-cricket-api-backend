@@ -6,7 +6,7 @@ export const projectKey = process.env.CRICKET_PROJECT_KEY
 export const authHeader = 'rs-token'
 
 const authTokenKey = 'cric-auth-token'
-const authTokenExp = 60 * 60 * 12 // 12 hours
+const authTokenExp = 60 * 60 * 6 // 6 hours
 
 export const getAuthToken = async () => {
   let token = Cache.get(authTokenKey)

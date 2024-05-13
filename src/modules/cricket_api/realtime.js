@@ -16,13 +16,12 @@ class _MatchSocket {
     // the subscribed match content are emitted with 'on_match_update' event
     // since it's gzipped data, parse it to unzip it
     this._socket.on('on_match_update', function (res) {
-      console.log('new match update received \n')
       processMatchUpdate(JSON.parse(res))
     })
 
     // emits 'on_error' on, match not subscribed
     this._socket.on('on_error', function (data) {
-      console.error('not_subscribed', JSON.parse(data))
+      console.error('on_error', data)
     })
   }
 

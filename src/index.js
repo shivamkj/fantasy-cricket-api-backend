@@ -19,8 +19,8 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, _) => {
 async function cleanUp() {
   console.log('cleaning up everything')
   await fastify.close()
+  await worker.close(true)
   await pool.end()
-  await worker.close()
   console.log('shutting down')
 }
 
