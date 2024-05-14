@@ -52,7 +52,7 @@ CREATE TABLE squad (
 ALTER TABLE squad ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE ball_by_ball_score (
-  id           BIGINT,
+  id           INTEGER,
   match_id     INTEGER NOT NULL REFERENCES match (id),
   team_id      SMALLINT NOT NULL,
   batter       INTEGER NOT NULL REFERENCES player (id),
