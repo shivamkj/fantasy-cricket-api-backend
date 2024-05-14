@@ -26,7 +26,7 @@ const connection = {
   port: process.env.REDIS_PORT,
 }
 
-const queueName = 'asyncQueue'
+const queueName = 'ic8l'
 
 export const asyncQueue = new Queue(queueName, {
   connection,
@@ -40,9 +40,9 @@ export const asyncQueue = new Queue(queueName, {
   },
 })
 
-await addCronJobs()
+if (process.env.PROCESS_CRON_JOB == true) await addCronJobs()
 
-if (!PROD) await setupDashboard()
+if (process.env.SHOW_BULLMQ_DASHBOARD == true) await setupDashboard()
 
 export const worker = new Worker(
   queueName,

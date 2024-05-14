@@ -1,7 +1,6 @@
 import fastifyPackage from 'fastify'
 import { PROD } from './helper.js'
 import jwt from 'jsonwebtoken'
-import { validate as validUuid } from 'uuid'
 
 export const fastify = fastifyPackage({})
 
@@ -46,18 +45,10 @@ const jwtSecret = process.env.JWT_SECRET
 export const authHandler = (request, reply, done) => {
   const authHeader = request.headers.authorization?.replace('Bearer ', '')
 
-  if (!PROD) {
-    if (!authHeader || !validUuid(authHeader)) {
-      return reply.status(401).send({ error: 'Unauthorized (Invalid Token)' })
-    } else {
-      request.userId = authHeader
-      return done()
-    }
-  }
-
   jwt.verify(authHeader, jwtSecret, function (err, decoded) {
     if (err == null) {
       request.userId = decoded.sub
+      console.log(decoded.sub)
       done()
     } else {
       reply.status(401).send({ error: 'Unauthorized (Invalid Token)' })
