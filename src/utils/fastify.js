@@ -48,7 +48,6 @@ export const authHandler = (request, reply, done) => {
   jwt.verify(authHeader, jwtSecret, function (err, decoded) {
     if (err == null) {
       request.userId = decoded.sub
-      console.log(decoded.sub)
       done()
     } else {
       reply.status(401).send({ error: 'Unauthorized (Invalid Token)' })
