@@ -1,4 +1,5 @@
 import { ClientErr, NotFound } from '../../utils/fastify.js'
+import { VIRTUAL } from '../../utils/helper.js'
 import { pool } from '../../utils/postgres.js'
 import { ajv } from '../../utils/validator.js'
 import { betValues, ticketValues } from '../constants.js'
@@ -31,8 +32,6 @@ export async function buyTicketV1(request, reply) {
   const matchId = request.params.matchId
   if (!matchId) throw new ClientErr('matchId not passed')
 
-  // TODO: Check balance and deduct balance
-
   // Validate request
   const validated = validateBetReq(request.body)
   if (!validated) throw new ClientErr('invalid request body')
@@ -48,21 +47,31 @@ export async function buyTicketV1(request, reply) {
   try {
     await client.query('BEGIN')
 
-    const betDetailQry = 'SELECT batting_team, slot_range from bet_slot WHERE match_id = $1'
-    const betSlot = await client.queryOne(betDetailQry, [matchId])
+    const query1 = 'SELECT batting_team, slot_range from bet_slot WHERE match_id = $1'
+    const betSlot = await client.queryOne(query1, [matchId])
     if (!betSlot) throw new ClientErr('betting not allowed')
 
-    const lobbyDetailsQry = 'SELECT id, entry_price, bet_price FROM lobby WHERE id = $1;'
-    const lobby = await client.queryOne(lobbyDetailsQry, [request.body.lobbyId])
+    const query2 = 'SELECT id, entry_price, bet_price, match_id FROM lobby WHERE id = $1;'
+    const lobby = await client.queryOne(query2, [request.body.lobbyId])
     if (!lobby) throw new NotFound('match')
+    if (lobby.match_id != matchId) throw new ClientErr('invalid lobby')
 
-    const insertTktQry = `
+    const betPrice = lobby.bet_price * bets.length
+    const total = betPrice + lobby.entry_price
+
+    // check and deduct balance
+    const query3 = 'UPDATE user_data SET balance = balance - $1 WHERE id = $2 RETURNING balance;'
+    const { balance } = await client.queryOne(query3, [total, request.userId])
+    console.log(balance)
+    if (balance < 0) throw new ClientErr('insufficient balance')
+
+    const query4 = `
 INSERT INTO 
 ticket(id, match_id, team_id, lobby_id, user_id, ticket_type, ball_range_id, ticket_price, bet_price, total_bet)
 VALUES(gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 `
-    const { id: ticketId } = await client.queryOne(insertTktQry, [
+    const { id: ticketId } = await client.queryOne(query4, [
       matchId,
       betSlot.batting_team,
       lobby.id,
@@ -70,7 +79,7 @@ RETURNING id;
       ticketType,
       betSlot.slot_range,
       lobby.entry_price,
-      lobby.bet_price * bets.length,
+      betPrice,
       bets.length,
     ])
 

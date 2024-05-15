@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 
 export const PROD = process.env.NODE_ENV == 'production'
 
+export const VIRTUAL = process.env.VIRTUAL == true
+
 export const tll = {
   '2min': 60 * 2,
   '5min': 60 * 5,

@@ -7,8 +7,8 @@ export async function createMatches() {
     headers: { [authHeader]: await getAuthToken() },
   })
   const body = await response.json()
+  if (response.status != 200) throw new Error(`invalid response, status:${response.status}, response: ${body}`)
 
-  console.log(body, response.status)
   const allMatches = []
   for (const match of body.data.matches) {
     if (match.status == 'completed') continue

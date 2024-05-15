@@ -7,6 +7,7 @@ import { insertTestBalldata } from './modules/internal/insert_test_data.js'
 import { getResult, ticketResultRoute } from './modules/internal/reports.js'
 import { processAsyncTasks } from './modules/async_processing/index.js'
 import { getPlayersV1 } from './modules/betting/player.js'
+import { completeKyc, userDetails } from './modules/user.js'
 
 // ****************** Public Routes ******************
 
@@ -26,6 +27,9 @@ export const privateRoutes = (fastify, options, done) => {
   fastify.put('/v1/matches/:matchId/ticket', buyTicketV1)
   fastify.get('/v1/users/tickets', aggregateUserTicketV1)
   fastify.get('/v1/matches/:matchId/:betType/players', getPlayersV1)
+  fastify.post('/v1/user/kyc', completeKyc)
+  fastify.put('/v1/user/kyc', completeKyc)
+  fastify.get('/v1/user/details', userDetails)
 
   // internal routes
   fastify.post('/internal/:matchId/:innings/:rangeId/ball', insertTestBalldata)

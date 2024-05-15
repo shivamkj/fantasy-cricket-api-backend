@@ -8,6 +8,7 @@
 
 CREATE TABLE user_data (
   id       UUID PRIMARY KEY,
+  balance  INTEGER DEFAULT 0,
   kyc_done BOOLEAN
 );
 ALTER TABLE user_data ENABLE ROW LEVEL SECURITY;
@@ -136,6 +137,7 @@ CREATE TABLE bet_slot (
   match_id     INTEGER PRIMARY KEY REFERENCES match (id),
   batting_team SMALLINT REFERENCES team (id),
   bowling_team SMALLINT REFERENCES team (id),
-  slot_range   SMALLINT
+  slot_range   SMALLINT,
+  innings      SMALLINT
 );
 ALTER TABLE bet_slot ENABLE ROW LEVEL SECURITY;

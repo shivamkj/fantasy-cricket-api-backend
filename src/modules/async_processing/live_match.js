@@ -38,8 +38,8 @@ export async function startMatch({ matchId, toss }) {
     await client.query(updateMatchQry, [battingTeam, bowlingTeam, matchId])
 
     const initialSlotQry = `
-INSERT INTO bet_slot (match_id, batting_team, bowling_team, slot_range)
-VALUES ($1, $2, $3, 5) ON CONFLICT (match_id) DO NOTHING;
+INSERT INTO bet_slot (match_id, batting_team, bowling_team, slot_range, innings)
+VALUES ($1, $2, $3, 5, 0) ON CONFLICT (match_id) DO NOTHING;
 `
     await client.query(initialSlotQry, [matchId, battingTeam, bowlingTeam])
     await client.query('COMMIT')
@@ -76,13 +76,25 @@ VALUES ($1, $2, $3) ON CONFLICT (match_id, ball_range_id, team_id) DO NOTHING;
     const nextSlot = currentSlot + slotRange
     const { last_slot } = await pool.queryOne('SELECT last_slot FROM match WHERE id = $1', [data.matchId])
     if (nextSlot > last_slot) {
-      // TODO: stop team swap several times
-      await pool.query('UPDATE bet_slot SET slot_range = 5, batting_team = bowling_team, bowling_team = batting_team;')
+      const query1 = 'SELECT innings, slot_range FROM bet_slot WHERE match_id = $1'
+      const currentSlot = await pool.queryOne(query1, [data.matchId])
+
+      if (currentSlot?.innings == 0) {
+        await pool.query(
+          'UPDATE bet_slot SET slot_range = 5, innings = 1, batting_team = bowling_team, bowling_team = batting_team WHERE match_id = $1;',
+          [data.matchId]
+        )
+      }
+
+      if (currentSlot?.innings == 1 && currentSlot?.slot_range != 5) {
+        await pool.query('DELETE FROM bet_slot WHERE match_id = $1;', [data.matchId])
+      }
     } else {
-      await pool.query('UPDATE bet_slot SET slot_range = $1;', [nextSlot])
+      await pool.query('UPDATE bet_slot SET slot_range = $1 WHERE match_id = $2;', [nextSlot, data.matchId])
     }
     Cache.set(`bet_slot-${currentSlot}`, true, tll['5min'])
   }
+
   // Send Match Score Update
   const matchScore = await fetchLiveMatchScoreV1(data.matchId)
   const matchScoreChannel = supabase.channel(`matchScore-${data.matchId}`)
