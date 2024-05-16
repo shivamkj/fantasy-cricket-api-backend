@@ -20,7 +20,7 @@ WHERE match_id = $1
       const { commission } = await client.queryOne(`SELECT commission FROM lobby WHERE id = $1;`, [lobby_id])
 
       const totalBetQry = `
-SELECT SUM(bet_price) as total
+SELECT SUM(bet_price) as total, COALESCE(SUM(bets_won), 1) as won
 FROM ticket
 WHERE
   match_id = $1
@@ -28,9 +28,11 @@ WHERE
   AND team_id = $3
   AND lobby_id = $4;      
 `
-      const { total } = await client.queryOne(totalBetQry, [data.matchId, data.ballRangeId, data.teamId, lobby_id])
+      // won is by default 1, not zero to avoid divide by zero error and division by 1 also gives same value
+      const { total, won } = await client.queryOne(totalBetQry, [data.matchId, data.ballRangeId, data.teamId, lobby_id])
 
-      const finalTotal = round(total - (total / 100) * commission)
+      const deducted = round(total - (total / 100) * commission) // deduct comission
+      const finalTotal = deducted / won // divide equally among wons in a lobby
 
       const updatePayQry = `
 UPDATE ticket

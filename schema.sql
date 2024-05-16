@@ -126,7 +126,7 @@ CREATE TYPE bet_type AS ENUM (
 );
 
 CREATE TABLE bet (
-  ticket_id UUID NOT NULL REFERENCES ticket (id),
+  ticket_id UUID NOT NULL REFERENCES ticket (id) ON DELETE CASCADE,
   range_id  SMALLINT NOT NULL, -- For storing runs, wickets, etc. bet by user
   bet_type  BET_TYPE,
   player_id INTEGER
