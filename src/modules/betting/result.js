@@ -117,7 +117,7 @@ WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 // Economy = Runs conceded / Overs bowled
 export const getEconomy = async (matchId, ballRangeId, teamId) => {
   const query = `
-SELECT ROUND(SUM(bbs.runs_off_bat + COALESCE(bbs.wide, 0) + COALESCE(bbs.noball, 0)) / (COUNT(DISTINCT bbs.ball) / 6.0), 2) AS economy
+SELECT ROUND(SUM(runs_off_bat + COALESCE(wide, 0) + COALESCE(noball, 0)) / (COUNT(DISTINCT ball) / 6.0), 2) AS economy
 FROM ball_by_ball_score WHERE match_id = $1 AND team_id = $2 AND ball >= $3 AND ball <= $4
 `
   const { economy } = await pool.queryOne(query, [matchId, teamId, ...getBallRange(ballRangeId)])
