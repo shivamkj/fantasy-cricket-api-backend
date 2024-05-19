@@ -42,6 +42,6 @@ export async function addCronJobs() {
   await asyncQueue.add(tasks.hourlyCron, null, {
     jobId: tasks.hourlyCron,
     repeatJobKey: tasks.hourlyCron,
-    repeat: { pattern: '*/10 * * * *' },
+    repeat: { pattern: '*/30 * * * *' },
   })
 }
