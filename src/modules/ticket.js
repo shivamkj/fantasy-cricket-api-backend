@@ -11,6 +11,7 @@ SELECT
   t.id,
   t.ticket_type,
   t.bet_price AS price,
+  m.league AS league,
   t1.team_name AS t1name,
   t1.logo AS t1logo,
   t2.team_name AS t2name,
