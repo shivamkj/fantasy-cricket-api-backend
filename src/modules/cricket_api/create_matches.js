@@ -2,13 +2,19 @@ import fetch from 'node-fetch'
 import { projectKey, baseUrl, getAuthToken, authHeader } from './utils.js'
 import { pool } from '../../utils/postgres.js'
 
-export async function createMatches() {
+export async function createMatches(forceRefresh = false) {
   const response = await fetch(`${baseUrl}/v5/cricket/${projectKey}/featured-matches-2/`, {
-    headers: { [authHeader]: await getAuthToken() },
+    headers: { [authHeader]: await getAuthToken(forceRefresh) },
   })
-  const body = await response.json()
-  if (response.status != 200) throw new Error(`invalid response, status:${response.status}, response: ${body}`)
 
+  // retry once with force refreshing token if response is not successful
+  if (response.status != 200 && forceRefresh) {
+    throw new Error(`invalid response, status:${response.status}, response: ${response.body}`)
+  } else if (response.status != 200) {
+    return createMatches(true)
+  }
+
+  const body = await response.json()
   const allMatches = []
   for (const match of body.data.matches) {
     if (match.status == 'completed') continue

@@ -6,11 +6,11 @@ export const projectKey = process.env.CRICKET_PROJECT_KEY
 export const authHeader = 'rs-token'
 
 const authTokenKey = 'cric-auth-token'
-const authTokenExp = 60 * 60 * 5 // 5 hours
+const authTokenExp = 60 * 60 * 4 // 4 hours
 
-export const getAuthToken = async () => {
+export const getAuthToken = async (forceRefresh = false) => {
   let token = Cache.get(authTokenKey)
-  if (token) return token
+  if (token && !forceRefresh) return token
 
   const response = await fetch(baseUrl + `/v5/core/${projectKey}/auth/`, {
     method: 'post',
