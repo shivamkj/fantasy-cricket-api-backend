@@ -51,7 +51,7 @@ LIMIT $2;
 export async function getMatchScore(matchId, teamId, client) {
   const scoreQuery = `
 SELECT
-  COALESCE(SUM(runs_off_bat), 0) AS run,
+  COALESCE(SUM(runs_off_bat + extra), 0) AS run,
   COUNT(wicket) + COUNT(run_out) AS wicket,
   COALESCE(MAX(ball), 0) AS over
 FROM ball_by_ball_score
