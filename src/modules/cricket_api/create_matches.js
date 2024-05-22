@@ -2,6 +2,13 @@ import fetch from 'node-fetch'
 import { projectKey, baseUrl, getAuthToken, authHeader } from './utils.js'
 import { pool } from '../../utils/postgres.js'
 
+const upsertStatement = `
+ON CONFLICT (key)
+DO UPDATE SET
+  team1_id = excluded.team1_id,
+  team2_id = excluded.team2_id;
+`
+
 export async function createMatches(forceRefresh = false) {
   const response = await fetch(`${baseUrl}/v5/cricket/${projectKey}/featured-matches-2/`, {
     headers: { [authHeader]: await getAuthToken(forceRefresh) },
@@ -31,7 +38,7 @@ export async function createMatches(forceRefresh = false) {
     })
   }
 
-  await pool.insertMany(allMatches, 'match', 'ON CONFLICT (key) DO NOTHING')
+  await pool.insertMany(allMatches, 'match', upsertStatement)
 }
 
 // returns teamId for the given team, also creates team if it not exists in the database
