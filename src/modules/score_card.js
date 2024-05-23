@@ -60,7 +60,7 @@ export async function fetchScoreCardV1(matchId) {
 SELECT
   p.jersey_name AS name,
   SUM(bbs.runs_off_bat) AS runs,
-  COUNT(DISTINCT bbs.ball) AS balls,
+  COUNT(DISTINCT bbs.ball) + COALESCE(COUNT(bbs.noball), 0) AS balls,
   COUNT(bbs.four) AS fours,
   COUNT(bbs.six) AS sixes,
   ROUND((SUM(bbs.runs_off_bat)::numeric / COUNT(DISTINCT bbs.ball)) * 100, 2) AS strike_rate
