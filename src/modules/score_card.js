@@ -17,7 +17,7 @@ SELECT
   ball, (COALESCE(runs_off_bat, 0) + COALESCE(extra, 0)) AS run, COALESCE(wicket, FALSE) AS wicket
 FROM ball_by_ball_score
 WHERE match_id = $1
-ORDER BY ball DESC LIMIT 6;
+ORDER BY id DESC LIMIT 6;
 `
     // Process to filter current over balls only
     const { rows: balls } = await client.query(last6BallsQuery, [matchId])
