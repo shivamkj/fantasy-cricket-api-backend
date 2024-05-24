@@ -6,7 +6,8 @@ const upsertStatement = `
 ON CONFLICT (key)
 DO UPDATE SET
   team1_id = excluded.team1_id,
-  team2_id = excluded.team2_id;
+  team2_id = excluded.team2_id
+WHERE match.setup_done = false;
 `
 
 export async function createMatches(forceRefresh = false) {
