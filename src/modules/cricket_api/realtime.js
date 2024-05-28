@@ -20,8 +20,10 @@ class _MatchSocket {
     })
 
     // emits 'on_error' on, match not subscribed
-    this._socket.on('on_error', function (data) {
+    this._socket.on('on_error', async function (data) {
       console.error('on_error', data)
+      console.log(data.http_status_code)
+      if (data.http_status_code == 401) await getAuthToken(true)
     })
   }
 
