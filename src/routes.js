@@ -2,7 +2,7 @@ import { fastify, authHandler } from './utils/fastify.js'
 import { getLobbyV1 as getLobbiesV1, listMatchesV1 } from './modules/match.js'
 import { getLiveMatchScoreV1, getScoreCardV1 } from './modules/score_card.js'
 import { listUserTicketV1, aggregateUserTicketV1 } from './modules/ticket.js'
-import { buyTicketV1, getBetPriceV1 } from './modules/betting/buy_ticket.js'
+import { buyTicketV1, getBetPriceV1, getBetSlot } from './modules/betting/buy_ticket.js'
 import { insertTestBalldata } from './modules/internal/insert_test_data.js'
 import { getResult, ticketResultRoute } from './modules/internal/reports.js'
 import { processAsyncTasks } from './modules/async_processing/index.js'
@@ -22,6 +22,7 @@ export const privateRoutes = (fastify, options, done) => {
   fastify.addHook('preHandler', authHandler)
 
   fastify.get('/v1/matches/:lobbyId/bet', getBetPriceV1)
+  fastify.get('/v1/matches/betSlot/:matchId', getBetSlot)
   fastify.get('/v1/matches/:matchId/tickets', listUserTicketV1)
   fastify.post('/v1/matches/:matchId/ticket', buyTicketV1)
   fastify.put('/v1/matches/:matchId/ticket', buyTicketV1)

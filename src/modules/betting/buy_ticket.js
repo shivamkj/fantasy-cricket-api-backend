@@ -117,3 +117,17 @@ export async function getBetPriceV1(request, reply) {
   if (!details) throw new NotFound('match')
   reply.send(details)
 }
+
+export async function getBetSlot(request, reply) {
+  const matchId = request.params.matchId
+  if (!matchId) throw new ClientErr('match id not passed')
+
+  const sqlQuery = `SELECT last_slot FROM match WHERE id = $1;`
+  const lastSlot = await pool.queryOne(sqlQuery, [matchId])
+  if (lastSlot == null) throw new NotFound('match')
+
+  const sqlQuery2 = `SELECT slot_range FROM bet_slot WHERE match_id = $1;`
+  const currentSlot = await pool.queryOne(sqlQuery2, [matchId])
+
+  reply.send({ currentSlot: currentSlot?.slot_range ?? 0, lastSlot: lastSlot.last_slot })
+}
