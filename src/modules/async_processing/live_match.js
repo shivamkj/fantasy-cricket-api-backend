@@ -1,9 +1,10 @@
-import { Cache, supabase, tll } from '../../utils/helper.js'
+import { Cache, tll } from '../../utils/helper.js'
 import { pool } from '../../utils/postgres.js'
+import { supabaseRealtime } from '../../utils/supabase.js'
 import { slotRange } from '../cricket_api/process_update.js'
 import { matchSocket } from '../cricket_api/realtime.js'
 import { matchIdToKey } from '../cricket_api/utils.js'
-import { fetchLiveMatchScoreV1, fetchScoreCardV1, getTeamsId } from '../score_card.js'
+import { fetchLiveMatchScoreV1, fetchScoreCardV1 } from '../score_card.js'
 import { liveRepeatCheck } from './cron.js'
 import { asyncQueue, tasks } from './index.js'
 import { processTickets } from './tickets.js'
@@ -84,6 +85,7 @@ VALUES ($1, $2, $3) ON CONFLICT (match_id, ball_range_id, team_id) DO NOTHING;
           'UPDATE bet_slot SET slot_range = 5, innings = 1, batting_team = bowling_team, bowling_team = batting_team WHERE match_id = $1;',
           [data.matchId]
         )
+        await supabaseRealtime.send(`betSlot-${data.matchId}`, 'betSlot', { currentSlot: 5, lastSlot: last_slot })
       }
 
       if (currentSlot?.innings == 1 && currentSlot?.slot_range != 5) {
@@ -91,19 +93,16 @@ VALUES ($1, $2, $3) ON CONFLICT (match_id, ball_range_id, team_id) DO NOTHING;
       }
     } else {
       await pool.query('UPDATE bet_slot SET slot_range = $1 WHERE match_id = $2;', [nextSlot, data.matchId])
+      await supabaseRealtime.send(`betSlot-${data.matchId}`, 'betSlot', { currentSlot: nextSlot, lastSlot: last_slot })
     }
     Cache.set(`bet_slot-${currentSlot}`, true, tll['5min'])
   }
 
   // Send Match Score Update
   const matchScore = await fetchLiveMatchScoreV1(data.matchId)
-  const matchScoreChannel = supabase.channel(`matchScore-${data.matchId}`)
-  await matchScoreChannel.send({ type: 'broadcast', event: 'matchScore', payload: matchScore })
-  supabase.removeChannel(matchScoreChannel) // clean up the channel
+  await supabaseRealtime.send(`matchScore-${data.matchId}`, 'matchScore', matchScore)
 
   // Send Scorecard Update
   const scoreCard = await fetchScoreCardV1(data.matchId)
-  const scoreCardChannel = supabase.channel(`scoreCard-${data.matchId}`)
-  await scoreCardChannel.send({ type: 'broadcast', event: 'scoreCard', payload: { scoreCard } })
-  supabase.removeChannel(scoreCardChannel) // clean up the channel
+  await supabaseRealtime.send(`scoreCard-${data.matchId}`, 'scoreCard', { scoreCard })
 }
