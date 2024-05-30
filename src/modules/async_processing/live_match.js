@@ -57,6 +57,7 @@ export async function endMatch({ matchId }) {
   const isRemoved = await asyncQueue.removeRepeatableByKey(
     `${tasks.processLiveMatch}:${tasks.processLiveMatch}-${matchId}:::${liveRepeatCheck}`
   )
+  await pool.query('DELETE FROM bet_slot WHERE match_id = $1;', [matchId])
   console.log('removed processLiveMatch repeatble job', isRemoved)
 }
 

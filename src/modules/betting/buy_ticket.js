@@ -122,12 +122,21 @@ export async function getBetSlot(request, reply) {
   const matchId = request.params.matchId
   if (!matchId) throw new ClientErr('match id not passed')
 
-  const sqlQuery = `SELECT last_slot FROM match WHERE id = $1;`
-  const lastSlot = await pool.queryOne(sqlQuery, [matchId])
-  if (lastSlot == null) throw new NotFound('match')
+  const sqlQuery = `SELECT last_slot AS "lastSlot", live FROM match WHERE id = $1;`
+  const matchDetails = await pool.queryOne(sqlQuery, [matchId])
+  if (matchDetails == null) throw new NotFound('match')
 
-  const sqlQuery2 = `SELECT slot_range FROM bet_slot WHERE match_id = $1;`
-  const currentSlot = await pool.queryOne(sqlQuery2, [matchId])
+  const sqlQuery2 = `
+SELECT
+  slot_range AS "slotRange",
+  t1.team_name AS "battingTeam",
+  t2.team_name AS "bowlingTeam"
+FROM bet_slot
+JOIN team t1 ON batting_team = t1.id
+JOIN team t2 ON bowling_team = t2.id
+WHERE match_id = $1
+`
+  const slotDetails = await pool.queryOne(sqlQuery2, [matchId])
 
-  reply.send({ currentSlot: currentSlot?.slot_range ?? 0, lastSlot: lastSlot.last_slot })
+  reply.send({ ...slotDetails, ...matchDetails })
 }
