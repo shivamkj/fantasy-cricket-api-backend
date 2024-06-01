@@ -67,8 +67,8 @@ export const processMatchUpdate = async (res) => {
     const playerIdKeyMap = await playersKeyToId(Array.from(allPlayerKeys), client)
 
     // get team id from team keys
-    const teamKeys = [res.data.teams.a.key, res.data.teams.b.key]
-    const { rows: teamsId } = await client.query('SELECT id FROM team WHERE key IN ($1, $2);', teamKeys)
+    const { id: team1Id } = await client.queryOne('SELECT id FROM team WHERE key = $1;', [res.data.teams.a.key])
+    const { id: team2Id } = await client.queryOne('SELECT id FROM team WHERE key = $1;', [res.data.teams.b.key])
 
     // Get balls data from the ids extracted above
     const ballsToProcess = []
@@ -81,7 +81,7 @@ export const processMatchUpdate = async (res) => {
         batter: playerIdKeyMap[ball.batsman.player_key],
         bowler: playerIdKeyMap[ball.bowler.player_key],
         ball: parseFloat(`${ball.overs[0]}.${ball.overs[1]}`),
-        team_id: ball.batting_team == 'a' ? teamsId[0].id : teamsId[1].id,
+        team_id: ball.batting_team == 'a' ? team1Id : team2Id,
         runs_off_bat: ball.batsman.runs,
         extra: ball.team_score.extras,
         wide: ball.ball_type == 'wide' ? ball.team_score.extras : null,
