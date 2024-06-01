@@ -61,6 +61,8 @@ export const processMatchUpdate = async (res) => {
       const ball = ballData[ballId]
       allPlayerKeys.add(ball.batsman.player_key)
       allPlayerKeys.add(ball.bowler.player_key)
+      const wicketPlayer = ball.wicket?.player_key
+      if (wicketPlayer != null) allPlayerKeys.add(wicketPlayer)
     }
     const playerIdKeyMap = await playersKeyToId(Array.from(allPlayerKeys), client)
 
@@ -93,6 +95,12 @@ export const processMatchUpdate = async (res) => {
         six: ball.batsman.is_six ? true : null,
         commentary: ball.comment,
       })
+
+      const wicketPlayer = ball.wicket?.player_key
+      if (wicketPlayer != null) {
+        const playerId = playerIdKeyMap[wicketPlayer]
+        await client.query('DELETE FROM squad WHERE match_id = $1 AND player_id = $2;', [matchId, playerId])
+      }
     }
 
     await client.insertMany(ballsToProcess, 'ball_by_ball_score', upsertStatement)
