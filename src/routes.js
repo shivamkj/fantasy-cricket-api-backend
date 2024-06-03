@@ -1,5 +1,5 @@
 import { fastify, authHandler } from './utils/fastify.js'
-import { getLobbyV1 as getLobbiesV1, listMatchesV1 } from './modules/match.js'
+import { getLobbyV1 as getLobbiesV1, listEndedMatchesV1, listFeaturedMatchesV1 } from './modules/match.js'
 import { getLiveMatchScoreV1, getScoreCardV1 } from './modules/score_card.js'
 import { listUserTicketV1, aggregateUserTicketV1 } from './modules/ticket.js'
 import { buyTicketV1, getBetPriceV1, getBetSlot } from './modules/betting/buy_ticket.js'
@@ -11,7 +11,8 @@ import { completeKyc, userDetails } from './modules/user.js'
 
 // ****************** Public Routes ******************
 
-fastify.get('/v1/matches', listMatchesV1)
+fastify.get('/v1/matches', listFeaturedMatchesV1)
+fastify.get('/v1/matches/ended', listEndedMatchesV1)
 fastify.get('/v1/matches/:matchId/lobby', getLobbiesV1)
 fastify.get('/v1/matches/:matchId/live', getLiveMatchScoreV1)
 fastify.get('/v1/matches/:matchId/scorecard', getScoreCardV1)
