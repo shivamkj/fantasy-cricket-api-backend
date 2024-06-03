@@ -13,6 +13,7 @@ SELECT
   t2.code AS t2code,
   t2.logo AS t2logo,
   m.live,
+  m.ended,
   m.start_time,
   m.league
 FROM "match" m
@@ -46,12 +47,13 @@ export async function listMatchesV1(query, start, limit) {
     const { rows: allMatch } = await client.query(query, [start, limit])
 
     for (const match of allMatch) {
-      if (match.live) {
+      if (match.live || match.ended) {
         match['t1Score'] = await getMatchScore(match.id, match.t1id, client)
         match['t2Score'] = await getMatchScore(match.id, match.t2id, client)
       }
       delete match.t1id
       delete match.t2id
+      delete match.ended
     }
 
     return allMatch
