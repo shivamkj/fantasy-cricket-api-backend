@@ -21,8 +21,12 @@ export const getAuthToken = async (forceRefresh = false) => {
   })
   const body = await response.json()
 
-  token = body.data.token
+  token = body.data?.token
   Cache.set(authTokenKey, token, authTokenExp)
+  if (token == null) {
+    console.error(body);
+    throw Error(`could not get auth token from cricket API ${body}`,)
+  }
   return token
 }
 
